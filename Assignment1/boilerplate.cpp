@@ -39,6 +39,20 @@ GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
+struct Triangle {
+	float x0;
+	float y0;
+	
+	float x1;
+	float y1;
+	
+	float x2;
+	float y2;
+
+	float color;
+	float width;
+};
+
 
 struct MyShader
 {
@@ -66,6 +80,9 @@ struct CurrentState
 };
 
 CurrentState currentstate;
+
+// Custom function prototypes
+void Sierpinski(vector<float>& vertices, vector<float>& colours, Triangle& triangle_prev, int recursions);
 
 // load, compile, and link shaders, returning true if successful
 bool InitializeShaders(MyShader *shader)
@@ -229,6 +246,7 @@ void GenerateSquaresDiamonds(MyGeometry *geometry, vector<float>& vertices, vect
 
 void GenerateSpiral(MyGeometry *geometry, vector<float>& vertices, vector<float>& colours, int layer) 
 {
+	// code for colour taken from tutorial
 	float red = 1.f;
 	float green = 0.f;
 	float blue = 0.f;
@@ -252,9 +270,77 @@ void GenerateSpiral(MyGeometry *geometry, vector<float>& vertices, vector<float>
 	geometry->renderMode = GL_LINE_STRIP;
 }
 
+
+void Sierpinski(vector<float>& vertices, vector<float>& colours, Triangle& triangle_prev, int recursions) {
+	if (recursions == 0) 
+		return;
+
+	Triangle triangle_curr;
+	Triangle triangle_a;
+	Triangle triangle_b;
+	Triangle triangle_c;
+
+	// Determine points
+	triangle_curr.x0 = triangle_prev.x0;
+	triangle_curr.y0 = triangle_prev.y0;
+	
+	triangle_curr.x1 = triangle_prev.x0+triangle_prev.width;
+	triangle_curr.y1 = triangle_prev.y0;
+	
+	triangle_curr.x2 = triangle_curr.x0+(triangle_prev.width/2);
+	triangle_curr.y2 = sqrt(3)*triangle_prev.width/2;
+
+	// Push vertices and colours to buffer
+	vertices.push_back(triangle_curr.x0);
+	vertices.push_back(triangle_curr.y0);
+
+	vertices.push_back(triangle_curr.x1);
+	vertices.push_back(triangle_curr.y1);
+
+	vertices.push_back(triangle_curr.x2);
+	vertices.push_back(triangle_curr.y2);
+
+	colours.push_back(1);
+	colours.push_back(0);
+	colours.push_back(0);
+
+	colours.push_back(1);
+	colours.push_back(0);
+	colours.push_back(0);
+
+	colours.push_back(1);
+	colours.push_back(0);
+	colours.push_back(0);
+
+	// Perform next level of recursion
+	triangle_a.x0 = triangle_curr.x0;
+	triangle_a.y0 = triangle_curr.y0;
+	triangle_a.width = triangle_curr.width/2;
+
+	triangle_b.x0 = (triangle_curr.x0+triangle_curr.x1)/2;
+	triangle_b.y0 = (triangle_curr.y0+triangle_curr.y1)/2;
+	triangle_b.width = triangle_curr.width/2;
+
+	triangle_c.x0 = (triangle_curr.x0+triangle_curr.x2)/2;
+	triangle_c.y0 = (triangle_curr.y0+triangle_curr.y2)/2;
+	triangle_c.width = triangle_curr.width/2;
+	Sierpinski(vertices, colours, triangle_a, recursions-1);
+	Sierpinski(vertices, colours, triangle_b, recursions-1);
+	Sierpinski(vertices, colours, triangle_c, recursions-1);
+}
+
 void GenerateTriangles(MyGeometry *geometry, vector<float>& vertices, vector<float>& colours, int layer) 
 {
-	// TODO Serpinski
+	Triangle triangle;
+
+	triangle.x0 = -0.9f;
+	triangle.y0 = 0;
+	triangle.width = 1.8f;
+
+	Sierpinski(vertices, colours, triangle, layer);
+
+	geometry->elementCount = vertices.size() / 2;
+	geometry->renderMode = GL_TRIANGLES;
 }
 
 // deallocate geometry-related objects
@@ -346,7 +432,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		currentstate.shape = SPIRAL;
 		currentstate.layer = 1;
 		updateDisplay = true;
-	} else if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+	} else if (key == GLFW_KEY_E && action == GLFW_PRESS) {
 		currentstate.shape = TRIANGLES;
 		currentstate.layer = 1;
 		updateDisplay = true;
