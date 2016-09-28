@@ -39,16 +39,16 @@ GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
-struct Triangle {
-	float x0;
-	float y0;
-	
-	float x1;
-	float y1;
-	
-	float x2;
-	float y2;
+struct Coordinates {
+	float x;
+	float y;
+};
 
+struct Triangle {
+	Coordinates a;
+	Coordinates b;
+	Coordinates c;
+	
 	float color;
 	float width;
 };
@@ -272,58 +272,63 @@ void GenerateSpiral(MyGeometry *geometry, vector<float>& vertices, vector<float>
 
 
 void Sierpinski(vector<float>& vertices, vector<float>& colours, Triangle& triangle_prev, int recursions) {
-	if (recursions == 0) 
-		return;
 
-	Triangle triangle_curr;
+	// Push vertices and colours to buffer
+	if (recursions == 1) {
+		vertices.push_back(triangle_prev.a.x);
+		vertices.push_back(triangle_prev.a.y);
+
+		vertices.push_back(triangle_prev.b.x);
+		vertices.push_back(triangle_prev.b.y);
+
+		vertices.push_back(triangle_prev.c.x);
+		vertices.push_back(triangle_prev.c.y);
+
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		return;
+	}
+
 	Triangle triangle_a;
 	Triangle triangle_b;
 	Triangle triangle_c;
+	Triangle triangle_center;
 
-	// Determine points
-	triangle_curr.x0 = triangle_prev.x0;
-	triangle_curr.y0 = triangle_prev.y0;
-	
-	triangle_curr.x1 = triangle_prev.x0+triangle_prev.width;
-	triangle_curr.y1 = triangle_prev.y0;
-	
-	triangle_curr.x2 = triangle_curr.x0+(triangle_prev.width/2);
-	triangle_curr.y2 = sqrt(3)*triangle_prev.width/2;
+	// Determine points for helper center triangle
+	triangle_center.a.x = triangle_prev.a.x+(triangle_prev.width/2);	
+	triangle_center.a.y = triangle_prev.a.y;
 
-	// Push vertices and colours to buffer
-	vertices.push_back(triangle_curr.x0);
-	vertices.push_back(triangle_curr.y0);
+	triangle_center.b.x = triangle_prev.a.x+(triangle_prev.width*0.75f);
+	triangle_center.b.y = triangle_prev.a.y+(sqrt(3)*triangle_prev.width/4);
 
-	vertices.push_back(triangle_curr.x1);
-	vertices.push_back(triangle_curr.y1);
-
-	vertices.push_back(triangle_curr.x2);
-	vertices.push_back(triangle_curr.y2);
-
-	colours.push_back(1);
-	colours.push_back(0);
-	colours.push_back(0);
-
-	colours.push_back(1);
-	colours.push_back(0);
-	colours.push_back(0);
-
-	colours.push_back(1);
-	colours.push_back(0);
-	colours.push_back(0);
+	triangle_center.c.x = triangle_prev.a.x+triangle_prev.width*0.25f;
+	triangle_center.c.y = triangle_prev.a.y+(sqrt(3)*triangle_prev.width/4);
 
 	// Perform next level of recursion
-	triangle_a.x0 = triangle_curr.x0;
-	triangle_a.y0 = triangle_curr.y0;
-	triangle_a.width = triangle_curr.width/2;
+	triangle_a.a = triangle_prev.a;	
+	triangle_a.b = triangle_center.a;
+	triangle_a.c = triangle_center.c;
+	triangle_a.width = triangle_prev.width/2;
+	
+	triangle_b.a = triangle_center.a;	
+	triangle_b.b = triangle_prev.b;
+	triangle_b.c = triangle_center.b;
+	triangle_b.width = triangle_prev.width/2;
+	
+	triangle_c.a = triangle_center.c;	
+	triangle_c.b = triangle_center.b;
+	triangle_c.c = triangle_prev.c;
+	triangle_c.width = triangle_prev.width/2;
 
-	triangle_b.x0 = (triangle_curr.x0+triangle_curr.x1)/2;
-	triangle_b.y0 = (triangle_curr.y0+triangle_curr.y1)/2;
-	triangle_b.width = triangle_curr.width/2;
-
-	triangle_c.x0 = (triangle_curr.x0+triangle_curr.x2)/2;
-	triangle_c.y0 = (triangle_curr.y0+triangle_curr.y2)/2;
-	triangle_c.width = triangle_curr.width/2;
 	Sierpinski(vertices, colours, triangle_a, recursions-1);
 	Sierpinski(vertices, colours, triangle_b, recursions-1);
 	Sierpinski(vertices, colours, triangle_c, recursions-1);
@@ -333,8 +338,15 @@ void GenerateTriangles(MyGeometry *geometry, vector<float>& vertices, vector<flo
 {
 	Triangle triangle;
 
-	triangle.x0 = -0.9f;
-	triangle.y0 = 0;
+	triangle.a.x = -0.9f;
+	triangle.a.y = -0.9f;
+
+	triangle.b.x = 0.9f;
+	triangle.b.y = -0.9f;
+
+	triangle.c.x = 0;
+	triangle.c.y = -0.9f+(1.8f*sqrt(3)/2);
+
 	triangle.width = 1.8f;
 
 	Sierpinski(vertices, colours, triangle, layer);
