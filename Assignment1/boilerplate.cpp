@@ -55,7 +55,7 @@ struct MyShader
 enum Shape 
 {
 	SQUARES_DIAMONDS,
-	LOOPS,
+	SPIRAL,
 	TRIANGLES
 };
 
@@ -223,10 +223,33 @@ void GenerateSquaresDiamonds(MyGeometry *geometry, vector<float>& vertices, vect
 		}
     }
 
-
     geometry->elementCount = layer*16;
     geometry->renderMode = GL_LINES;
+}
 
+void GenerateSpiral(MyGeometry *geometry, vector<float>& vertices, vector<float>& colours, int layer) 
+{
+	float red = 1.f;
+	float green = 0.f;
+	float blue = 0.f;
+
+	float maxradius = 360*currentstate.layer;
+	for(int i=0; i<=maxradius; ++i)
+	{
+		float rad = (float)layer*i*2*M_PI/maxradius;
+		vertices.push_back((i/maxradius) * (float) cos(rad));
+		vertices.push_back((i/maxradius) * (float) sin(rad));
+
+		colours.push_back(red);
+		colours.push_back(green);
+		colours.push_back(blue);
+
+		red -= 1.f/360.f;
+		green += 1.f/360.f;
+		blue += .5f/360.f;
+	}
+	geometry->elementCount = vertices.size() / 2;
+    geometry->renderMode = GL_LINE_STRIP;
 }
 
 // deallocate geometry-related objects
@@ -282,6 +305,9 @@ void UpdateDisplay() {
         case SQUARES_DIAMONDS:
 			GenerateSquaresDiamonds(&globalGeo, vertices, colours, currentstate.layer);
 			break;
+        case SPIRAL:
+			GenerateSpiral(&globalGeo, vertices, colours, currentstate.layer);
+			break;
 	}
 
     if (!InitializeGeometry(&globalGeo, vertices, colours))
@@ -291,7 +317,6 @@ void UpdateDisplay() {
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	bool updateDisplay = false;
-	cout << currentstate.layer << endl;
 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
@@ -300,13 +325,23 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 			currentstate.layer--;
 			updateDisplay = true;
 		}
-    }
-    else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+	} else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
     {
 		if (currentstate.layer < 7) {
 			currentstate.layer++;
 			updateDisplay = true;
 		}
+	} else if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+    {
+        currentstate.shape = SQUARES_DIAMONDS;
+        currentstate.layer = 1;
+		updateDisplay = true;
+	}
+    else if (key == GLFW_KEY_W && action == GLFW_PRESS)
+    {
+        currentstate.shape = SPIRAL;
+        currentstate.layer = 1;
+		updateDisplay = true;
     }
 
 	if(updateDisplay) {
