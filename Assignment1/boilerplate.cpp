@@ -284,17 +284,55 @@ void Sierpinski(vector<float>& vertices, vector<float>& colours, Triangle& trian
 		vertices.push_back(triangle_prev.c.x);
 		vertices.push_back(triangle_prev.c.y);
 
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
+		if (triangle_prev.a.x<0 && triangle_prev.a.y<0 && triangle_prev.b.x>0 && triangle_prev.b.y<0) {
+			colours.push_back(1);
+			colours.push_back(1);
+			colours.push_back(1);
 
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
+			colours.push_back(1);
+			colours.push_back(1);
+			colours.push_back(1);
 
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
+			colours.push_back(1);
+			colours.push_back(1);
+			colours.push_back(1);
+		} else if (triangle_prev.a.x<0 && triangle_prev.a.y<0) {
+			colours.push_back(sqrt(pow(triangle_prev.a.x,2)+pow(triangle_prev.a.y,2))/1.190589);
+			colours.push_back(sqrt(pow(triangle_prev.a.x,2)+pow(triangle_prev.a.y,2))/1.190589);
+			colours.push_back(0);
+
+			colours.push_back(sqrt(pow(triangle_prev.a.x,2)+pow(triangle_prev.a.y,2))/1.190589);
+			colours.push_back(sqrt(pow(triangle_prev.a.x,2)+pow(triangle_prev.a.y,2))/1.190589);
+			colours.push_back(0);
+
+			colours.push_back(sqrt(pow(triangle_prev.a.x,2)+pow(triangle_prev.a.y,2))/1.190589);
+			colours.push_back(sqrt(pow(triangle_prev.a.x,2)+pow(triangle_prev.a.y,2))/1.190589);
+			colours.push_back(0);
+		} else if (triangle_prev.b.x>0 && triangle_prev.b.y<0) {
+			colours.push_back(0);
+			colours.push_back(sqrt(pow(triangle_prev.b.x,2)+pow(triangle_prev.b.y,2))/1.190589);
+			colours.push_back(sqrt(pow(triangle_prev.b.x,2)+pow(triangle_prev.b.y,2))/1.190589);
+
+			colours.push_back(0);
+			colours.push_back(sqrt(pow(triangle_prev.b.x,2)+pow(triangle_prev.b.y,2))/1.190589);
+			colours.push_back(sqrt(pow(triangle_prev.b.x,2)+pow(triangle_prev.b.y,2))/1.190589);
+
+			colours.push_back(0);
+			colours.push_back(sqrt(pow(triangle_prev.b.x,2)+pow(triangle_prev.b.y,2))/1.190589);
+			colours.push_back(sqrt(pow(triangle_prev.b.x,2)+pow(triangle_prev.b.y,2))/1.190589);
+		} else if (triangle_prev.c.y>0) {
+			colours.push_back(sqrt(pow(triangle_prev.c.x,2)+pow(triangle_prev.c.y,2))/1.190589);
+			colours.push_back(0);
+			colours.push_back(sqrt(pow(triangle_prev.c.x,2)+pow(triangle_prev.c.y,2))/1.190589);
+
+			colours.push_back(sqrt(pow(triangle_prev.c.x,2)+pow(triangle_prev.c.y,2))/1.190589);
+			colours.push_back(0);
+			colours.push_back(sqrt(pow(triangle_prev.c.x,2)+pow(triangle_prev.c.y,2))/1.190589);
+
+			colours.push_back(sqrt(pow(triangle_prev.c.x,2)+pow(triangle_prev.c.y,2))/1.190589);
+			colours.push_back(0);
+			colours.push_back(sqrt(pow(triangle_prev.b.x,2)+pow(triangle_prev.b.y,2))/1.190589);
+		}
 		return;
 	}
 
@@ -339,13 +377,13 @@ void GenerateTriangles(MyGeometry *geometry, vector<float>& vertices, vector<flo
 	Triangle triangle;
 
 	triangle.a.x = -0.9f;
-	triangle.a.y = -0.9f;
+	triangle.a.y = -0.7794228f;
 
 	triangle.b.x = 0.9f;
-	triangle.b.y = -0.9f;
+	triangle.b.y = -0.7794228f;
 
 	triangle.c.x = 0;
-	triangle.c.y = -0.9f+(1.8f*sqrt(3)/2);
+	triangle.c.y = 0.7794228f;
 
 	triangle.width = 1.8f;
 
