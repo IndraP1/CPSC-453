@@ -1,0 +1,24 @@
+= CPSC 453 Assignment 1 README
+
+== Student Info and Assignement Details
+
+Name: Mahindra Prasetyo
+
+The following code was not my own:
+
+- boilerplate.cpp uses code adapted and modified from the tutorial, specifically code for generating spirals.
+Additionally, a lot of the code used to render with OpenGL was given at the start of the assignment.
+- vertex.glsl and fragment.glsl were provided.
+
+== Instructions
+
+In terminal, run the following commands:
+
+. `make`
+. `./OpenGL`
+. Use keys `q`, `w`, and `e`, to switch between squares/diamonds, spirals, and triangles respectively.
+. Use keys `UP`, and `down` to increase or decrease the number of layers displayed respectively.
+. Use key `Esc` to close the window.
+
+== Platform and Compiler Info
+// TODO
