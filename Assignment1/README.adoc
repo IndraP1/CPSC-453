@@ -21,4 +21,10 @@ In terminal, run the following commands:
 . Use key `Esc` to close the window.
 
 == Platform and Compiler Info
-// TODO
+
+- Fedora Release 24
+- gcc version 6.2.1 20160916 (Red Hat 6.2.1-2) (GCC) 
+- OpenGL version string: 4.5.0 NVIDIA 367.18
+
+
+
