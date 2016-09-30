@@ -250,8 +250,6 @@ void generate_spiral(MyGeometry *geometry, vector<float>& vertices, vector<float
 {
     // code inspired from tutorial example
     float red = 1.f;
-    float green = 0.f;
-    float blue = 0.f;
 
     float max_radius = 360*current_state.layer;
     for(int i=0; i<=max_radius; ++i)
@@ -261,12 +259,10 @@ void generate_spiral(MyGeometry *geometry, vector<float>& vertices, vector<float
         vertices.push_back((i/max_radius) * (float) sin(rad));
 
         colours.push_back(red);
-        colours.push_back(green);
-        colours.push_back(blue);
+        colours.push_back(0);
+        colours.push_back(0);
 
-        red -= 1.f/360.f;
-        green += 1.f/360.f;
-        blue += .5f/360.f;
+        red -= 1.f/max_radius;
     }
     geometry->elementCount = vertices.size() / 2;
     geometry->renderMode = GL_LINE_STRIP;
