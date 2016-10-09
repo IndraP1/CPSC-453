@@ -39,6 +39,22 @@ GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
+enum SampleImages
+{
+	IMAGE1,
+	IMAGE2,
+	IMAGE3,
+	IMAGE4,
+	IMAGE5,
+	IMAGE6,
+};
+
+struct CurrentState
+{
+    enum SampleImages image;
+};
+
+CurrentState current_state;
 
 struct MyShader
 {
@@ -95,6 +111,8 @@ struct MyTexture
 	MyTexture() : textureID(0), target(0), width(0), height(0)
 	{}
 };
+
+MyTexture global_tex;
 
 bool InitializeTexture(MyTexture* texture, const char* filename, GLuint target = GL_TEXTURE_2D)
 {
@@ -261,6 +279,37 @@ void RenderScene(MyGeometry *geometry, MyTexture* texture, MyShader *shader)
 	CheckGLErrors();
 }
 
+void update_display() {
+	string imagepath = "images/";
+
+    switch(current_state.image) {
+	        case IMAGE1:
+				imagepath += "image1-mandrill.png";
+	            break;
+	        case IMAGE2:
+				imagepath += "image2-uclogo.png";
+	            break;
+	        case IMAGE3:
+				imagepath += "image3-aerial.jpg";
+	            break;
+	        case IMAGE4:
+				imagepath += "image4-thirsk.jpg";
+	            break;
+	        case IMAGE5:
+				imagepath += "image5-pattern.png";
+	            break;
+	        case IMAGE6:
+				imagepath += "test.png";
+	            break;
+	    }
+
+	const char* p_c_str = imagepath.c_str();
+
+	if(!InitializeTexture(&global_tex, p_c_str, GL_TEXTURE_RECTANGLE))
+		cout << "Program failed to intialize texture!" << endl;
+}
+
+
 // --------------------------------------------------------------------------
 // GLFW callback functions
 
@@ -274,8 +323,33 @@ void ErrorCallback(int error, const char* description)
 // handles keyboard input events
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	bool should_update_display = false;
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	} else if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
+		current_state.image = IMAGE1;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
+		current_state.image = IMAGE2;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
+		current_state.image = IMAGE3;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_4 && action == GLFW_PRESS) {
+		current_state.image = IMAGE4;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_5 && action == GLFW_PRESS) {
+		current_state.image = IMAGE5;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_6 && action == GLFW_PRESS) {
+		current_state.image = IMAGE6;
+		should_update_display = true;
+	}
+
+	if(should_update_display) {
+		update_display();
+	}
 }
 
 // ==========================================================================
@@ -283,6 +357,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 int main(int argc, char *argv[])
 {
+	//initialize default behavior
+	current_state.image = IMAGE1;
+
 	// initialize the GLFW windowing system
 	if (!glfwInit()) {
 		cout << "ERROR: GLFW failed to initialize, TERMINATING" << endl;
@@ -322,15 +399,14 @@ int main(int argc, char *argv[])
 	if (!InitializeGeometry(&geometry))
 		cout << "Program failed to intialize geometry!" << endl;
 
-	MyTexture texture;
-	if(!InitializeTexture(&texture, "images/test.png", GL_TEXTURE_RECTANGLE))
-		cout << "Program failed to intialize texture!" << endl;
+
+	update_display();
 
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// call function to draw our scene
-		RenderScene(&geometry, &texture, &shader); //render scene with texture
+		RenderScene(&geometry, &global_tex, &shader); //render scene with texture
 
 		glfwSwapBuffers(window);
 
