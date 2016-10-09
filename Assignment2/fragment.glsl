@@ -24,7 +24,7 @@ void main(void)
 
     // write colour output without modification
     vec4 colour = texture(tex, newCoords);
-    colour = 1 - colour;
+    /* colour = 1 - colour; */
 
     FragmentColour = colour;
 }

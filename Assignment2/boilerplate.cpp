@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <string>
 #include <iterator>
+#include <vector>
 
 // specify that we want the OpenGL core profile before including GLFW headers
 #define GLFW_INCLUDE_GLCOREARB
@@ -172,29 +173,62 @@ struct MyGeometry
 	MyGeometry() : vertexBuffer(0), colourBuffer(0), vertexArray(0), elementCount(0)
 	{}
 };
+MyGeometry global_geo;
 
 // create buffers and fill with geometry data, returning true if successful
-bool InitializeGeometry(MyGeometry *geometry)
+bool InitializeGeometry(MyGeometry *geometry, vector<float>& vertices, vector<float>& texture_coord, vector<float>& colours)
 {
-	// three vertex positions and assocated colours of a triangle
-	const GLfloat vertices[][2] = {
-		{ -.6f, -.4f },
-		{ .0f,  .6f },
-		{ .6f, -.4f }
-	};
+	float basepos = 1.f;
+	float baseneg = -1.f;
 
-	const GLfloat textureCoords[][2] = {
-		{0.f, 0.f},
-		{256.f, 512.f},
-		{512.f, 0.f}
-	};
+	vertices.push_back(baseneg); //Top left
+	vertices.push_back(basepos);
 
-	const GLfloat colours[][3] = {
-		{ 1.0f, 0.0f, 0.0f },
-		{ 0.0f, 1.0f, 0.0f },
-		{ 0.0f, 0.0f, 1.0f }
-	};
-	geometry->elementCount = 3;
+	vertices.push_back(basepos); // Top right
+	vertices.push_back(basepos);
+
+	vertices.push_back(baseneg); // Bottom left
+	vertices.push_back(baseneg);
+
+	vertices.push_back(baseneg); // Bottom left
+	vertices.push_back(baseneg);
+
+	vertices.push_back(basepos); // Bottom right
+	vertices.push_back(baseneg);
+
+	vertices.push_back(basepos); // Top right
+	vertices.push_back(basepos);
+
+
+	texture_coord.push_back(0);
+	texture_coord.push_back(512);
+
+	texture_coord.push_back(512);
+	texture_coord.push_back(512);
+	
+	texture_coord.push_back(0);
+	texture_coord.push_back(0);
+
+	texture_coord.push_back(0);
+	texture_coord.push_back(0);
+
+	texture_coord.push_back(512);
+	texture_coord.push_back(0);
+
+	texture_coord.push_back(512);
+	texture_coord.push_back(512);
+
+	colours.push_back(1);
+	colours.push_back(0);
+	colours.push_back(0);
+	
+	colours.push_back(0);
+	colours.push_back(1);
+	colours.push_back(0);
+
+	colours.push_back(0);
+	colours.push_back(0);
+	colours.push_back(1);
 
 	// these vertex attribute indices correspond to those specified for the
 	// input variables in the vertex shader
@@ -202,20 +236,22 @@ bool InitializeGeometry(MyGeometry *geometry)
 	const GLuint COLOUR_INDEX = 1;
 	const GLuint TEXTURE_INDEX = 2;
 
+	geometry->elementCount = vertices.size()/2;
+
 	// create an array buffer object for storing our vertices
 	glGenBuffers(1, &geometry->vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
 	//
 	glGenBuffers(1, &geometry->textureBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, geometry->textureBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoords), textureCoords, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*texture_coord.size(), &texture_coord[0], GL_STATIC_DRAW);
 
 	// create another one for storing our colours
 	glGenBuffers(1, &geometry->colourBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, geometry->colourBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colours), colours, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*colours.size(), &colours[0], GL_STATIC_DRAW);
 
 	// create a vertex array object encapsulating all our vertex attributes
 	glGenVertexArrays(1, &geometry->vertexArray);
@@ -280,6 +316,9 @@ void RenderScene(MyGeometry *geometry, MyTexture* texture, MyShader *shader)
 }
 
 void update_display() {
+	vector<float> colours;
+	vector<float> vertices;
+	vector<float> texture_coord;
 	string imagepath = "images/";
 
     switch(current_state.image) {
@@ -307,6 +346,9 @@ void update_display() {
 
 	if(!InitializeTexture(&global_tex, p_c_str, GL_TEXTURE_RECTANGLE))
 		cout << "Program failed to intialize texture!" << endl;
+
+	if (!InitializeGeometry(&global_geo, vertices, texture_coord, colours))
+		cout << "Program failed to intialize geometry!" << endl;
 }
 
 
@@ -394,11 +436,6 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	// call function to create and fill buffers with geometry data
-	MyGeometry geometry;
-	if (!InitializeGeometry(&geometry))
-		cout << "Program failed to intialize geometry!" << endl;
-
 
 	update_display();
 
@@ -406,7 +443,7 @@ int main(int argc, char *argv[])
 	while (!glfwWindowShouldClose(window))
 	{
 		// call function to draw our scene
-		RenderScene(&geometry, &global_tex, &shader); //render scene with texture
+		RenderScene(&global_geo, &global_tex, &shader); //render scene with texture
 
 		glfwSwapBuffers(window);
 
@@ -414,7 +451,7 @@ int main(int argc, char *argv[])
 	}
 
 	// clean up allocated resources before exit
-	DestroyGeometry(&geometry);
+	DestroyGeometry(&global_geo);
 	DestroyShaders(&shader);
 	glfwDestroyWindow(window);
 	glfwTerminate();
