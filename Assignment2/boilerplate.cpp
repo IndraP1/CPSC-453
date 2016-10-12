@@ -40,6 +40,14 @@ GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
+struct ImageResolution 
+{
+	float width;
+	float height;
+};
+
+ImageResolution image_resolutions[6];
+
 enum SampleImages
 {
 	IMAGE1,
@@ -53,6 +61,13 @@ enum SampleImages
 struct CurrentState
 {
     enum SampleImages image;
+	int layer;
+};
+
+struct Coordinate
+{
+	float x;
+	float y;
 };
 
 CurrentState current_state;
@@ -321,26 +336,26 @@ void update_display() {
 	vector<float> texture_coord;
 	string imagepath = "images/";
 
-    switch(current_state.image) {
-	        case IMAGE1:
-				imagepath += "image1-mandrill.png";
-	            break;
-	        case IMAGE2:
-				imagepath += "image2-uclogo.png";
-	            break;
-	        case IMAGE3:
-				imagepath += "image3-aerial.jpg";
-	            break;
-	        case IMAGE4:
-				imagepath += "image4-thirsk.jpg";
-	            break;
-	        case IMAGE5:
-				imagepath += "image5-pattern.png";
-	            break;
-	        case IMAGE6:
-				imagepath += "test.png";
-	            break;
-	    }
+	switch(current_state.image) {
+		case IMAGE1:
+			imagepath += "image1-mandrill.png";
+			break;
+		case IMAGE2:
+			imagepath += "image2-uclogo.png";
+			break;
+		case IMAGE3:
+			imagepath += "image3-aerial.jpg";
+			break;
+		case IMAGE4:
+			imagepath += "image4-thirsk.jpg";
+			break;
+		case IMAGE5:
+			imagepath += "image5-pattern.png";
+			break;
+		case IMAGE6:
+			imagepath += "test.png";
+			break;
+	}
 
 	const char* p_c_str = imagepath.c_str();
 
@@ -387,11 +402,67 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 	} else if (key == GLFW_KEY_6 && action == GLFW_PRESS) {
 		current_state.image = IMAGE6;
 		should_update_display = true;
+	} else if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+		current_state.layer++;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+		current_state.layer--;
+		should_update_display = true;
 	}
 
-	if(should_update_display) {
+	if(should_update_display)
 		update_display();
-	}
+}
+
+/* struct MouseStatus */ 
+/* { */
+/* 	bool button_pressed; */
+/* 	Coordinate vector_offset; */
+/* 	Coordinate prev_vector_offset; */
+/* 	Coordinate mouse_press; */
+/* }; */
+/* MouseStatuse mouse_status; */
+
+/* static void MouseCallback(GLFWwindow* window, int button, int action, int mods) */
+/* { */
+/*     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) { */
+/* 		mouse_status.button_pressed = true; */
+/*         glfwGetCursorPos(window, &mouse_status.mouse_press.x, &mouse_status.mouse_press.y); */
+/*         mouse_status.prev_vector_offset = mouse_status.vector_offset; */
+/* 	} else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) { */
+/*         mouse_button_left_press = false; */
+/*     } */
+/* } */
+
+/* static void CursorCallback(GLFWwindow * window, double xpos, double ypos) */
+/* { */
+/*     if(mouse_button_left_press) */
+/*     { */
+/*         image_offset.x = previous_image_offset.x - (mouse_press_coordinate.x - xpos); */
+/*         image_offset.y = previous_image_offset.y + (mouse_press_coordinate.y - ypos); */
+/*         cout << image_offset.x << "," << image_offset.y << endl; */
+/*     } */
+/* } */
+
+void StoreImageResolution(ImageResolution* image_resolutions) 
+{
+	image_resolutions[0].width = 512;
+	image_resolutions[0].height = 512;
+
+	image_resolutions[1].width = 692;
+	image_resolutions[1].height = 516;
+
+	image_resolutions[2].width = 2000;
+	image_resolutions[2].height = 931;
+
+	image_resolutions[3].width = 400;
+	image_resolutions[3].height = 591;
+
+	image_resolutions[4].width = 2048;
+	image_resolutions[4].height = 1536;
+
+	image_resolutions[5].width = 512;
+	image_resolutions[5].height = 512;
 }
 
 // ==========================================================================
@@ -400,7 +471,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 int main(int argc, char *argv[])
 {
 	//initialize default behavior
+	current_state.layer = 1;
 	current_state.image = IMAGE1;
+	StoreImageResolution(image_resolutions);
 
 	// initialize the GLFW windowing system
 	if (!glfwInit()) {
@@ -424,6 +497,8 @@ int main(int argc, char *argv[])
 
 	// set keyboard callback function and make our context current (active)
 	glfwSetKeyCallback(window, KeyCallback);
+	/* glfwSetMouseButtonCallback(window, MouseCallback); */
+	/* glfwSetCursorPosCallback(window, CursorCallback); */
 	glfwMakeContextCurrent(window);
 
 	// query and print out information about our OpenGL environment
@@ -442,6 +517,11 @@ int main(int argc, char *argv[])
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
+        /* GLint new_image_location = glGetUniformLocation(shader.program, "offset"); */
+        /* glUniform2f(new_image_location, image_offset.x, image_offset.y); */
+		glUseProgram(shader.program);
+        GLint image_magnification = glGetUniformLocation(shader.program, "magnification");
+        glUniform1f(image_magnification, current_state.layer);
 		// call function to draw our scene
 		RenderScene(&global_geo, &global_tex, &shader); //render scene with texture
 

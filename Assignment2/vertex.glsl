@@ -15,11 +15,16 @@ layout(location = 2) in vec2 VertexTexture;
 // output to be interpolated between vertices and passed to the fragment stage
 out vec3 Colour;
 out vec2 textureCoords;
+out vec2 newVertexPosition;
+
+uniform float magnification;
 
 void main()
 {
+	newVertexPosition.x = VertexPosition.x*magnification;
+	newVertexPosition.y = VertexPosition.y*magnification;
     // assign vertex position without modification
-    gl_Position = vec4(VertexPosition, 0.0, 1.0);
+    gl_Position = vec4(newVertexPosition, 0.0, 1.0);
 
     // assign output colour to be interpolated
     Colour = VertexColour;
