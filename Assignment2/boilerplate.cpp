@@ -62,15 +62,16 @@ struct CurrentState
 {
     enum SampleImages image;
 	int layer;
-};
-
-struct Coordinate
-{
-	float x;
-	float y;
+	float rotation;
 };
 
 CurrentState current_state;
+
+struct Coordinate
+{
+	double x;
+	double y;
+};
 
 struct MyShader
 {
@@ -216,10 +217,10 @@ bool InitializeGeometry(MyGeometry *geometry, vector<float>& vertices, vector<fl
 
 
 	texture_coord.push_back(0);
-	texture_coord.push_back(512);
+	texture_coord.push_back(image_resolutions[current_state.image].height);
 
-	texture_coord.push_back(512);
-	texture_coord.push_back(512);
+	texture_coord.push_back(image_resolutions[current_state.image].width);
+	texture_coord.push_back(image_resolutions[current_state.image].height);
 	
 	texture_coord.push_back(0);
 	texture_coord.push_back(0);
@@ -227,11 +228,11 @@ bool InitializeGeometry(MyGeometry *geometry, vector<float>& vertices, vector<fl
 	texture_coord.push_back(0);
 	texture_coord.push_back(0);
 
-	texture_coord.push_back(512);
+	texture_coord.push_back(image_resolutions[current_state.image].width);
 	texture_coord.push_back(0);
 
-	texture_coord.push_back(512);
-	texture_coord.push_back(512);
+	texture_coord.push_back(image_resolutions[current_state.image].width);
+	texture_coord.push_back(image_resolutions[current_state.image].height);
 
 	colours.push_back(1);
 	colours.push_back(0);
@@ -358,6 +359,9 @@ void update_display() {
 	}
 
 	const char* p_c_str = imagepath.c_str();
+	
+	current_state.layer = 1;
+	current_state.rotation = 0;
 
 	if(!InitializeTexture(&global_tex, p_c_str, GL_TEXTURE_RECTANGLE))
 		cout << "Program failed to intialize texture!" << endl;
@@ -402,49 +406,50 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 	} else if (key == GLFW_KEY_6 && action == GLFW_PRESS) {
 		current_state.image = IMAGE6;
 		should_update_display = true;
-	} else if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
-		current_state.layer++;
-		should_update_display = true;
-	} else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
-		current_state.layer--;
-		should_update_display = true;
+	} else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+		current_state.rotation += M_PI/12;
+	} else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+		current_state.rotation -= M_PI/12;
 	}
 
 	if(should_update_display)
 		update_display();
 }
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	if(!((current_state.layer + yoffset) < 1))
+		current_state.layer = current_state.layer + yoffset;
+}
 
-/* struct MouseStatus */ 
-/* { */
-/* 	bool button_pressed; */
-/* 	Coordinate vector_offset; */
-/* 	Coordinate prev_vector_offset; */
-/* 	Coordinate mouse_press; */
-/* }; */
-/* MouseStatuse mouse_status; */
+struct MouseStatus 
+{
+	bool button_pressed;
+	Coordinate image_offset;
+	Coordinate prev_image_offset;
+	Coordinate mouse_press;
+};
+MouseStatus mouse_status;
 
-/* static void MouseCallback(GLFWwindow* window, int button, int action, int mods) */
-/* { */
-/*     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) { */
-/* 		mouse_status.button_pressed = true; */
-/*         glfwGetCursorPos(window, &mouse_status.mouse_press.x, &mouse_status.mouse_press.y); */
-/*         mouse_status.prev_vector_offset = mouse_status.vector_offset; */
-/* 	} else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) { */
-/*         mouse_button_left_press = false; */
-/*     } */
-/* } */
+static void mouse_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		mouse_status.button_pressed = true;
+        glfwGetCursorPos(window, &mouse_status.mouse_press.x, &mouse_status.mouse_press.y);
+        mouse_status.prev_image_offset = mouse_status.image_offset;
+	} else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		mouse_status.button_pressed = false;
+    }
+}
 
-/* static void CursorCallback(GLFWwindow * window, double xpos, double ypos) */
-/* { */
-/*     if(mouse_button_left_press) */
-/*     { */
-/*         image_offset.x = previous_image_offset.x - (mouse_press_coordinate.x - xpos); */
-/*         image_offset.y = previous_image_offset.y + (mouse_press_coordinate.y - ypos); */
-/*         cout << image_offset.x << "," << image_offset.y << endl; */
-/*     } */
-/* } */
+static void cursor_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if(mouse_status.button_pressed) {
+        mouse_status.image_offset.x = mouse_status.prev_image_offset.x - (mouse_status.mouse_press.x - xpos);
+        mouse_status.image_offset.y = mouse_status.prev_image_offset.y + (mouse_status.mouse_press.y - ypos);
+    }
+}
 
-void StoreImageResolution(ImageResolution* image_resolutions) 
+void StoreImageResolution()
 {
 	image_resolutions[0].width = 512;
 	image_resolutions[0].height = 512;
@@ -472,8 +477,9 @@ int main(int argc, char *argv[])
 {
 	//initialize default behavior
 	current_state.layer = 1;
+	current_state.rotation = 0;
 	current_state.image = IMAGE1;
-	StoreImageResolution(image_resolutions);
+	StoreImageResolution();
 
 	// initialize the GLFW windowing system
 	if (!glfwInit()) {
@@ -497,8 +503,9 @@ int main(int argc, char *argv[])
 
 	// set keyboard callback function and make our context current (active)
 	glfwSetKeyCallback(window, KeyCallback);
-	/* glfwSetMouseButtonCallback(window, MouseCallback); */
-	/* glfwSetCursorPosCallback(window, CursorCallback); */
+	glfwSetScrollCallback(window, scroll_callback);
+	glfwSetMouseButtonCallback(window, mouse_callback);
+	glfwSetCursorPosCallback(window, cursor_callback);
 	glfwMakeContextCurrent(window);
 
 	// query and print out information about our OpenGL environment
@@ -517,9 +524,14 @@ int main(int argc, char *argv[])
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
-        /* GLint new_image_location = glGetUniformLocation(shader.program, "offset"); */
-        /* glUniform2f(new_image_location, image_offset.x, image_offset.y); */
 		glUseProgram(shader.program);
+		
+        GLint new_image_location = glGetUniformLocation(shader.program, "image_offset");
+        glUniform2f(new_image_location, mouse_status.image_offset.x, mouse_status.image_offset.y);
+
+        GLint image_rotation = glGetUniformLocation(shader.program, "rotation");
+        glUniform1f(image_rotation, current_state.rotation);
+
         GLint image_magnification = glGetUniformLocation(shader.program, "magnification");
         glUniform1f(image_magnification, current_state.layer);
 		// call function to draw our scene
