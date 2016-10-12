@@ -23,8 +23,14 @@ uniform float rotation;
 
 void main()
 {
-	newVertexPosition.x = (cos(rotation)*VertexPosition.x - sin(rotation)*VertexPosition.y)*magnification + image_offset.x/200;
-	newVertexPosition.y = (sin(rotation)*VertexPosition.x + cos(rotation)*VertexPosition.y)*magnification + image_offset.y/200;
+	newVertexPosition.x = (VertexPosition.x * magnification) + image_offset.x/512;
+	newVertexPosition.y = (VertexPosition.y * magnification) + image_offset.y/512;
+
+	float tmpx = newVertexPosition.x;
+	float tmpy = newVertexPosition.y;
+
+	newVertexPosition.x = cos(rotation)*tmpx - sin(rotation)*tmpy;
+	newVertexPosition.y = sin(rotation)*tmpx + cos(rotation)*tmpy;
 
     // assign vertex position without modification
     gl_Position = vec4(newVertexPosition, 0.0, 1.0);
