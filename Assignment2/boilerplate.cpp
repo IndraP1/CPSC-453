@@ -91,6 +91,7 @@ struct Luminance
 };
 
 Luminance luminance;
+float enable_sepia;
 
 struct MyShader
 {
@@ -423,6 +424,7 @@ void update_display() {
 	
 	current_state.layer = 1;
 	current_state.rotation = 0;
+	enable_sepia = 0;
 	luminance.r = 1;
 	luminance.g = 1;
 	luminance.b = 1;
@@ -474,17 +476,25 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 	} else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
 		current_state.rotation -= M_PI/12;
 	} else if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
+		enable_sepia = 0;
 		luminance.r = 0.333;
 		luminance.g = 0.333;
 		luminance.b = 0.333;
 	} else if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+		enable_sepia = 0;
 		luminance.r = 0.299;
 		luminance.g = 0.587;
 		luminance.b = 0.114;
 	} else if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+		enable_sepia = 0;
 		luminance.r = 0.213;
 		luminance.g = 0.715;
 		luminance.b = 0.072;
+	} else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+		enable_sepia = 1;
+		luminance.r = 1;
+		luminance.g = 1;
+		luminance.b = 1;
 	}
 
 	if(should_update_display) {
@@ -605,6 +615,9 @@ int main(int argc, char *argv[])
 
         GLint image_luminance = glGetUniformLocation(shader.program, "luminance");
         glUniform3f(image_luminance, luminance.r, luminance.g, luminance.b);
+
+        GLint image_sepia = glGetUniformLocation(shader.program, "sepia");
+        glUniform1f(image_sepia, enable_sepia);
 		// call function to draw our scene
 		RenderScene(&global_geo, &global_tex, &shader); //render scene with texture
 

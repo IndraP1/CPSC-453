@@ -15,6 +15,7 @@ out vec4 FragmentColour;
 
 uniform sampler2DRect tex;
 uniform vec3 luminance;
+uniform float sepia;
 
 void main(void)
 {
@@ -32,6 +33,15 @@ void main(void)
 		colour.r = lum;
 		colour.g = lum;
 		colour.b = lum;
+	}
+	if (sepia > 0) {
+		float inputRed = colour.r;
+		float inputBlue = colour.g;
+		float inputGreen = colour.b;
+
+		colour.r = (inputRed * .393) + (inputGreen *.769) + (inputBlue * .189);
+		colour.g = (inputRed * .349) + (inputGreen *.686) + (inputBlue * .168);
+		colour.b = (inputRed * .272) + (inputGreen *.534) + (inputBlue * .131);
 	}
 
     FragmentColour = colour;
