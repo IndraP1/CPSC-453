@@ -73,6 +73,25 @@ struct Coordinate
 	double y;
 };
 
+struct MouseStatus 
+{
+	bool button_pressed;
+	Coordinate image_offset;
+	Coordinate prev_image_offset;
+	Coordinate mouse_press;
+};
+
+MouseStatus mouse_status;
+
+struct Luminance
+{
+	float r;
+	float g;
+	float b;
+};
+
+Luminance luminance;
+
 struct MyShader
 {
 	// OpenGL names for vertex and fragment shaders, shader program
@@ -192,29 +211,71 @@ struct MyGeometry
 MyGeometry global_geo;
 
 // create buffers and fill with geometry data, returning true if successful
-bool InitializeGeometry(MyGeometry *geometry, vector<float>& vertices, vector<float>& texture_coord, vector<float>& colours)
-{
+void insert_vertices(vector<float>& vertices) {
+	float ratio = image_resolutions[current_state.image].height / image_resolutions[current_state.image].width;
 	float basepos = 1.f;
 	float baseneg = -1.f;
 
-	vertices.push_back(baseneg); //Top left
-	vertices.push_back(basepos);
+	if(ratio > 1) {
+		vertices.push_back(-1*ratio/2); //Top left
+		vertices.push_back(basepos);
 
-	vertices.push_back(basepos); // Top right
-	vertices.push_back(basepos);
+		vertices.push_back(ratio/2); // Top right
+		vertices.push_back(basepos);
 
-	vertices.push_back(baseneg); // Bottom left
-	vertices.push_back(baseneg);
+		vertices.push_back(-1*ratio/2); // Bottom left
+		vertices.push_back(baseneg);
 
-	vertices.push_back(baseneg); // Bottom left
-	vertices.push_back(baseneg);
+		vertices.push_back(-1*ratio/2); // Bottom left
+		vertices.push_back(baseneg);
 
-	vertices.push_back(basepos); // Bottom right
-	vertices.push_back(baseneg);
+		vertices.push_back(ratio/2); // Bottom right
+		vertices.push_back(baseneg);
 
-	vertices.push_back(basepos); // Top right
-	vertices.push_back(basepos);
+		vertices.push_back(ratio/2); // Top right
+		vertices.push_back(basepos);
+	} else if(ratio < 1) {
+		vertices.push_back(baseneg); // Top left
+		vertices.push_back(ratio); 
 
+		vertices.push_back(basepos); // top right
+		vertices.push_back(ratio); 
+
+		vertices.push_back(baseneg); // bottom left
+		vertices.push_back(-1*ratio); 
+
+		vertices.push_back(baseneg); // bottom left
+		vertices.push_back(-1*ratio); 
+
+		vertices.push_back(basepos); // Bottom right
+		vertices.push_back(-1*ratio); 
+
+		vertices.push_back(basepos); // Top right
+		vertices.push_back(ratio); 
+	} else {
+		vertices.push_back(baseneg); //Top left
+		vertices.push_back(basepos);
+
+		vertices.push_back(basepos); // Top right
+		vertices.push_back(basepos);
+
+		vertices.push_back(baseneg); // Bottom left
+		vertices.push_back(baseneg);
+
+		vertices.push_back(baseneg); // Bottom left
+		vertices.push_back(baseneg);
+
+		vertices.push_back(basepos); // Bottom right
+		vertices.push_back(baseneg);
+
+		vertices.push_back(basepos); // Top right
+		vertices.push_back(basepos);
+	}
+}
+
+bool InitializeGeometry(MyGeometry *geometry, vector<float>& vertices, vector<float>& texture_coord, vector<float>& colours)
+{
+	insert_vertices(vertices);
 
 	texture_coord.push_back(0);
 	texture_coord.push_back(image_resolutions[current_state.image].height);
@@ -362,6 +423,9 @@ void update_display() {
 	
 	current_state.layer = 1;
 	current_state.rotation = 0;
+	luminance.r = 1;
+	luminance.g = 1;
+	luminance.b = 1;
 
 	if(!InitializeTexture(&global_tex, p_c_str, GL_TEXTURE_RECTANGLE))
 		cout << "Program failed to intialize texture!" << endl;
@@ -385,7 +449,6 @@ void ErrorCallback(int error, const char* description)
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	bool should_update_display = false;
-
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	} else if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
@@ -410,10 +473,23 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		current_state.rotation += M_PI/12;
 	} else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
 		current_state.rotation -= M_PI/12;
+	} else if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
+		luminance.r = 0.333;
+		luminance.g = 0.333;
+		luminance.b = 0.333;
+	} else if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+		luminance.r = 0.299;
+		luminance.g = 0.587;
+		luminance.b = 0.114;
+	} else if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+		luminance.r = 0.213;
+		luminance.g = 0.715;
+		luminance.b = 0.072;
 	}
 
-	if(should_update_display)
+	if(should_update_display) {
 		update_display();
+	}
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
@@ -421,14 +497,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 		current_state.layer = current_state.layer + yoffset;
 }
 
-struct MouseStatus 
-{
-	bool button_pressed;
-	Coordinate image_offset;
-	Coordinate prev_image_offset;
-	Coordinate mouse_press;
-};
-MouseStatus mouse_status;
 
 static void mouse_callback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -534,6 +602,9 @@ int main(int argc, char *argv[])
 
         GLint image_magnification = glGetUniformLocation(shader.program, "magnification");
         glUniform1f(image_magnification, current_state.layer);
+
+        GLint image_luminance = glGetUniformLocation(shader.program, "luminance");
+        glUniform3f(image_luminance, luminance.r, luminance.g, luminance.b);
 		// call function to draw our scene
 		RenderScene(&global_geo, &global_tex, &shader); //render scene with texture
 

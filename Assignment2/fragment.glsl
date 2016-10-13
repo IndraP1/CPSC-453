@@ -14,6 +14,7 @@ in vec2 textureCoords;
 out vec4 FragmentColour;
 
 uniform sampler2DRect tex;
+uniform vec3 luminance;
 
 void main(void)
 {
@@ -24,7 +25,14 @@ void main(void)
 
     // write colour output without modification
     vec4 colour = texture(tex, newCoords);
-    /* colour = 1 - colour; */
+
+	if (luminance.r < 1) {
+		float lum = colour.r * luminance.r + colour.g * luminance.g + colour.b * luminance.b;
+
+		colour.r = lum;
+		colour.g = lum;
+		colour.b = lum;
+	}
 
     FragmentColour = colour;
 }
