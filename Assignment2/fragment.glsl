@@ -16,39 +16,47 @@ out vec4 FragmentColour;
 uniform sampler2DRect tex;
 uniform vec3 luminance;
 uniform float sepia;
+uniform uint sobel;
 
-float intensity(in vec4 pixel) 
-{
-	return sqrt((pixel.x*pixel.x)+(pixel.y*pixel.y)+(pixel.z*pixel.z));
-}
+mat3 sobel_hor = mat3( 
+	1.0, 2.0, 1.0, 
+	0.0, 0.0, 0.0, 
+	-1.0, -2.0, -1.0 
+);
 
-float threshold(in float thr1, in float thr2 , in float val) {
-	if (val < thr1) {return 0.0;}
-	if (val > thr2) {return 1.0;}
-	return val;
-}
+mat3 sobel_ver = mat3( 
+	1.0, 0.0, -1.0, 
+	2.0, 0.0, -2.0, 
+	1.0, 0.0, -1.0 
+);
 
+mat3 sobel_uns = mat3( 
+	0.0, -1.0, 0.0, 
+	-1.0, 5.0, -1.0, 
+	0.0, -1.0, 0.0 
+);
+
+// Code taken from http://computergraphics.stackexchange.com/questions/3646/opengl-glsl-sobel-edge-detection-filter
 vec3 detect_edge(vec2 coords)
 {
-	float d = 1.0/512.0;
+	mat3 I;
+	float filtered;
+	for (int i=0; i<3; i++) {
+		for (int j=0; j<3; j++) {
+			vec3 samp = texelFetch(tex, ivec2(textureCoords) + ivec2(i-1,j-1)).rgb;
+			I[i][j] = length(samp); 
+		}
+	}
 
-	float tleft = intensity(texture2DRect(tex,vec2(-d,d)));
-	float cleft = intensity(texture2DRect(tex,vec2(-d,0)));
-	float bleft = intensity(texture2DRect(tex,vec2(-d,-d)));
-	float tcenter = intensity(texture2DRect(tex,vec2(0,d)));
-	float bcenter = intensity(texture2DRect(tex,vec2(0,-d)));
-	float tright = intensity(texture2DRect(tex,vec2(d,d)));
-	float cright = intensity(texture2DRect(tex,vec2(d,0)));
-	float bright = intensity(texture2DRect(tex,vec2(d,-d)));
+	if (sobel == 1) {
+		filtered = dot(sobel_hor[0], I[0]) + dot(sobel_hor[1], I[1]) + dot(sobel_hor[2], I[2]); 
+	} else if (sobel == 2) {
+		filtered = dot(sobel_ver[0], I[0]) + dot(sobel_ver[1], I[1]) + dot(sobel_ver[2], I[2]);
+	} else if (sobel == 3) {
+		filtered = dot(sobel_uns[0], I[0]) + dot(sobel_uns[1], I[1]) + dot(sobel_uns[2], I[2]);
+	}
 
-	float x = tleft + 2.0*cleft + bleft - tright - 2.0*cright - bright;
-	float y = -tleft - 2.0*tcenter - tright + bleft + 2.0*bcenter + bright;
-	
-	float color = sqrt((x*x) + (y*y));
-	if (color > 1.0)
-		return vec3(0.0,0.0,0.0);
-
-	return vec3(1.0,1.0,1.0);
+	return vec3(filtered);
 }
 
 void main(void)
@@ -78,7 +86,9 @@ void main(void)
 		colour.b = (inputRed * .272) + (inputGreen *.534) + (inputBlue * .131);
 	}
 
-	colour.rgb = detect_edge(textureCoords.xy);
+	if (sobel > 0) {
+		colour.rgb = detect_edge(textureCoords.xy);
+	}
 
     FragmentColour = colour;
 }

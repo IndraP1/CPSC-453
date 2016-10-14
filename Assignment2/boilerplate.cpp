@@ -92,6 +92,7 @@ struct Luminance
 
 Luminance luminance;
 float enable_sepia;
+float sobel;
 
 struct MyShader
 {
@@ -428,6 +429,7 @@ void update_display() {
 	luminance.r = 1;
 	luminance.g = 1;
 	luminance.b = 1;
+	sobel = 0;
 
 	if(!InitializeTexture(&global_tex, p_c_str, GL_TEXTURE_RECTANGLE))
 		cout << "Program failed to intialize texture!" << endl;
@@ -495,6 +497,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		luminance.r = 1;
 		luminance.g = 1;
 		luminance.b = 1;
+	} else if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+		sobel = 1;
+	} else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+		sobel = 2;
+	} else if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+		sobel = 3;
 	}
 
 	if(should_update_display) {
@@ -618,6 +626,9 @@ int main(int argc, char *argv[])
 
         GLint image_sepia = glGetUniformLocation(shader.program, "sepia");
         glUniform1f(image_sepia, enable_sepia);
+
+        GLint image_sobel = glGetUniformLocation(shader.program, "sobel");
+        glUniform1ui(image_sobel, sobel);
 		// call function to draw our scene
 		RenderScene(&global_geo, &global_tex, &shader); //render scene with texture
 
