@@ -93,6 +93,7 @@ struct Luminance
 Luminance luminance;
 float enable_sepia;
 float sobel;
+float gaus;
 
 struct MyShader
 {
@@ -430,6 +431,9 @@ void update_display() {
 	luminance.g = 1;
 	luminance.b = 1;
 	sobel = 0;
+	gaus = 0;
+	mouse_status.image_offset.x = 0;
+	mouse_status.image_offset.y = 0;
 
 	if(!InitializeTexture(&global_tex, p_c_str, GL_TEXTURE_RECTANGLE))
 		cout << "Program failed to intialize texture!" << endl;
@@ -479,30 +483,50 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		current_state.rotation -= M_PI/12;
 	} else if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
 		enable_sepia = 0;
+		sobel = 0;
+		gaus = 0;
 		luminance.r = 0.333;
 		luminance.g = 0.333;
 		luminance.b = 0.333;
 	} else if (key == GLFW_KEY_W && action == GLFW_PRESS) {
 		enable_sepia = 0;
+		sobel = 0;
+		gaus = 0;
+		luminance.r = 0.333;
 		luminance.r = 0.299;
 		luminance.g = 0.587;
 		luminance.b = 0.114;
 	} else if (key == GLFW_KEY_E && action == GLFW_PRESS) {
 		enable_sepia = 0;
+		sobel = 0;
+		gaus = 0;
+		luminance.r = 0.333;
 		luminance.r = 0.213;
 		luminance.g = 0.715;
 		luminance.b = 0.072;
 	} else if (key == GLFW_KEY_R && action == GLFW_PRESS) {
 		enable_sepia = 1;
+		sobel = 0;
+		gaus = 0;
+		luminance.r = 0.333;
 		luminance.r = 1;
 		luminance.g = 1;
 		luminance.b = 1;
 	} else if (key == GLFW_KEY_A && action == GLFW_PRESS) {
 		sobel = 1;
+		gaus = 0;
 	} else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
 		sobel = 2;
+		gaus = 0;
 	} else if (key == GLFW_KEY_D && action == GLFW_PRESS) {
 		sobel = 3;
+		gaus = 0;
+	} else if (key == GLFW_KEY_Z && action == GLFW_PRESS) {
+		gaus = 3;
+	} else if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+		gaus = 5;
+	} else if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+		gaus = 7;
 	}
 
 	if(should_update_display) {
@@ -629,6 +653,9 @@ int main(int argc, char *argv[])
 
         GLint image_sobel = glGetUniformLocation(shader.program, "sobel");
         glUniform1ui(image_sobel, sobel);
+
+        GLint image_gaus = glGetUniformLocation(shader.program, "gaussize");
+        glUniform1ui(image_gaus, gaus);
 		// call function to draw our scene
 		RenderScene(&global_geo, &global_tex, &shader); //render scene with texture
 
