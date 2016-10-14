@@ -1,0 +1,35 @@
+= CPSC 453 Assignment 1 README
+
+== Student Info and Assignement Details
+
+Name: Mahindra Prasetyo
+
+The following code was not my own:
+
+- boilerplate.cpp was provided but heavily modified.
+- vertex.glsl and fragment.glsl were provided but heavily modified. Code for the detect_edge function inspired from http://stackoverflow.com/questions/2797549/block-filters-using-fragment-shaders
+
+== Instructions
+
+In terminal, run the following commands:
+
+. `make`
+. `./assmt2`
+. Use keys `1`, `2`, `3`, `4`, `5`, `6`, to switch between images.
+. To pan the image, drag the mouse around while holding down the left mouse button.
+. To zoom in/out, use the mouse scroll wheel.
+. Use keys `LEFT`, and `RIGHT` to rotate the image clockwise/counter clockwise.
+. Use keys `Q`, `W`, `E`, and `R`, to switch between luminance conversion formulas 1, 2, 3, and a sepia filter.
+To answer the questions of the assignment, formula 2 looks the best to me because it looks like it retains the most of the original color range. Different formulas exist to achieve different filtering effects for different applications (e.g. multimedia).
+. Use keys `A`, `S`, and `D`, to apply the horizontal sobel, vertical sobel, and unsharp mask respectively.
+. Use keys `Z`, `X`, and `C`, to apply the 3, 5, and 7 point Gaussians respectively.
+. Use key `Esc` to close the window.
+
+== Platform and Compiler Info
+
+- Fedora Release 24
+- gcc version 6.2.1 20160916 (Red Hat 6.2.1-2) (GCC) 
+- OpenGL version string: 4.5.0 NVIDIA 367.18
+
+
+

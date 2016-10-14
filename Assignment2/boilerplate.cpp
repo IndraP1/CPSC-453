@@ -418,7 +418,7 @@ void update_display() {
 			imagepath += "image5-pattern.png";
 			break;
 		case IMAGE6:
-			imagepath += "test.png";
+			imagepath += "image6-why.jpg";
 			break;
 	}
 
@@ -576,8 +576,8 @@ void StoreImageResolution()
 	image_resolutions[4].width = 2048;
 	image_resolutions[4].height = 1536;
 
-	image_resolutions[5].width = 512;
-	image_resolutions[5].height = 512;
+	image_resolutions[5].width = 3388;
+	image_resolutions[5].height = 2207;
 }
 
 // ==========================================================================

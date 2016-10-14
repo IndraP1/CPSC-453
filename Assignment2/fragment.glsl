@@ -34,6 +34,7 @@ mat3 sobel_uns = mat3(
 vec4 gaussian() {
 	float half;
 	float sigma;
+
 	if (gaussize == 3) {
 		half = 1;
 		sigma = 0.66;
