@@ -15,7 +15,6 @@
 #include <algorithm>
 #include <string>
 #include <iterator>
-#include "GlyphExtractor.h"
 
 // Specify that we want the OpenGL core profile before including GLFW headers
 #ifndef LAB_LINUX
@@ -31,7 +30,6 @@
 #include <stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
-
 using namespace std;
 // --------------------------------------------------------------------------
 // OpenGL utility and support function prototypes
@@ -41,7 +39,7 @@ bool CheckGLErrors();
 
 string LoadSource(const string &filename);
 GLuint CompileShader(GLenum shaderType, const string &source);
-GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader);
+GLuint LinkProgram(GLuint vertexShader, GLuint TCSshader, GLuint TESshader, GLuint fragmentShader); 
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
@@ -50,6 +48,8 @@ struct MyShader
 {
 	// OpenGL names for vertex and fragment shaders, shader program
 	GLuint  vertex;
+	GLuint  TCS; 
+	GLuint  TES; 
 	GLuint  fragment;
 	GLuint  program;
 
@@ -64,14 +64,18 @@ bool InitializeShaders(MyShader *shader)
 	// load shader source from files
 	string vertexSource = LoadSource("vertex.glsl");
 	string fragmentSource = LoadSource("fragment.glsl");
+	string TCSSource = LoadSource("tessControl.glsl");
+	string TESSource = LoadSource("tessEval.glsl"); 
 	if (vertexSource.empty() || fragmentSource.empty()) return false;
 
 	// compile shader source into shader objects
 	shader->vertex = CompileShader(GL_VERTEX_SHADER, vertexSource);
-	shader->fragment = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+	shader->fragment = CompileShader(GL_FRAGMENT_SHADER, fragmentSource); 
+	shader->TCS = CompileShader(GL_TESS_CONTROL_SHADER, TCSSource);
+	shader->TES = CompileShader(GL_TESS_EVALUATION_SHADER, TESSource);
 
 	// link shader program
-	shader->program = LinkProgram(shader->vertex, shader->fragment);
+	shader->program = LinkProgram(shader->vertex, shader->TCS, shader->TES, shader->fragment);
 
 	// check for OpenGL errors and return false if error occurred
 	return !CheckGLErrors();
@@ -85,6 +89,8 @@ void DestroyShaders(MyShader *shader)
 	glDeleteProgram(shader->program);
 	glDeleteShader(shader->vertex);
 	glDeleteShader(shader->fragment);
+	glDeleteShader(shader->TCS); 
+	glDeleteShader(shader->TES); 
 }
 
 // --------------------------------------------------------------------------
@@ -165,17 +171,17 @@ bool InitializeGeometry(MyGeometry *geometry)
 {
 	// three vertex positions and assocated colours of a triangle
 	const GLfloat vertices[][2] = {
-		{ -.6f, -.4f },
-                { 0, .6f },
-		{ .6f, -.4f }
+		{ 0.5f, 0.5f },
+		{ 1.0f, -0.5f },
+		{ 0.0f, -0.5f}
 	};
 
 	const GLfloat colours[][3] = {
 		{ 1.0f, 0.0f, 0.0f },
-		{ 0.0f, 1.0f, 0.0f },
-		{ 0.0f, 0.0f, 1.0f }
+		{ 1.0f, 0.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f }
 	};
-	geometry->elementCount = 3;
+	geometry->elementCount = 3; 
 
 	// these vertex attribute indices correspond to those specified for the
 	// input variables in the vertex shader
@@ -237,7 +243,7 @@ void RenderScene(MyGeometry *geometry, MyShader *shader)
 	// scene geometry, then tell OpenGL to draw our geometry
 	glUseProgram(shader->program);
 	glBindVertexArray(geometry->vertexArray);
-	glDrawArrays(GL_TRIANGLES, 0, geometry->elementCount);
+	glDrawArrays(GL_PATCHES, 0, geometry->elementCount);
 
 	// reset state to default (no shader or geometry bound)
 	glBindVertexArray(0);
@@ -292,8 +298,8 @@ int main(int argc, char *argv[])
 	// set keyboard callback function and make our context current (active)
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwMakeContextCurrent(window);
-
-	//Intialize GLAD
+	
+	//Intialize GLAD if not lab linux
 	#ifndef LAB_LINUX
 	if (!gladLoadGL())
 	{
@@ -301,7 +307,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	#endif
-
+	
 	// query and print out information about our OpenGL environment
 	QueryGLVersion();
 
@@ -317,17 +323,14 @@ int main(int argc, char *argv[])
 	if (!InitializeGeometry(&geometry))
 		cout << "Program failed to intialize geometry!" << endl;
 
-	//Load a font file and extract a glyph
-	//GlyphExtractor extractor;
-	//extractor.LoadFontFile("fonts/alex-brush/AlexBrush-Regular.ttf");
-	//MyGlyph glyph = extractor.ExtractGlyph('a');
-	
+	glPatchParameteri(GL_PATCH_VERTICES, 3);
+
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		// call function to draw our scene
-		RenderScene(&geometry, &shader);
-
+		RenderScene(&geometry, &shader); //render scene with texture
+								
 		glfwSwapBuffers(window);
 
 		glfwPollEvents();
@@ -438,13 +441,15 @@ GLuint CompileShader(GLenum shaderType, const string &source)
 }
 
 // creates and returns a program object linked from vertex and fragment shaders
-GLuint LinkProgram(GLuint vertexShader, GLuint fragmentShader)
+GLuint LinkProgram(GLuint vertexShader, GLuint TCSshader, GLuint TESshader, GLuint fragmentShader) 
 {
 	// allocate program object name
 	GLuint programObject = glCreateProgram();
 
 	// attach provided shader objects to this program
 	if (vertexShader)   glAttachShader(programObject, vertexShader);
+	if (TCSshader) glAttachShader(programObject, TCSshader); 
+	if (TESshader) glAttachShader(programObject, TESshader); 
 	if (fragmentShader) glAttachShader(programObject, fragmentShader);
 
 	// try linking the program with given attachments
