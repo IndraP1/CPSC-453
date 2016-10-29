@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <string>
 #include <iterator>
+#include <vector>
 
 // Specify that we want the OpenGL core profile before including GLFW headers
 #ifndef LAB_LINUX
@@ -43,6 +44,27 @@ GLuint LinkProgram(GLuint vertexShader, GLuint TCSshader, GLuint TESshader, GLui
 
 // --------------------------------------------------------------------------
 // Functions to set up OpenGL shader programs for rendering
+
+enum Scene
+{
+	QUAD,
+	CUBIC,
+};
+
+struct Coordinate
+{
+	double x;
+	double y;
+};
+
+struct CurrentState
+{
+	enum Scene scene;
+};
+
+CurrentState current_state;
+
+float bezier_deg;
 
 struct MyShader
 {
@@ -166,22 +188,13 @@ struct MyGeometry
 	{}
 };
 
-// create buffers and fill with geometry data, returning true if successful
-bool InitializeGeometry(MyGeometry *geometry)
-{
-	// three vertex positions and assocated colours of a triangle
-	const GLfloat vertices[][2] = {
-		{ 0.5f, 0.5f },
-		{ 1.0f, -0.5f },
-		{ 0.0f, -0.5f}
-	};
+MyGeometry global_geo;
 
-	const GLfloat colours[][3] = {
-		{ 1.0f, 0.0f, 0.0f },
-		{ 1.0f, 0.0f, 0.0f },
-		{ 1.0f, 0.0f, 0.0f }
-	};
-	geometry->elementCount = 3; 
+// create buffers and fill with geometry data, returning true if successful
+bool InitializeGeometry(MyGeometry *geometry, vector<float>& vertices, vector<float>& colours) {
+	// three vertex positions and assocated colours of a triangle
+
+	geometry->elementCount = vertices.size()/2; 
 
 	// these vertex attribute indices correspond to those specified for the
 	// input variables in the vertex shader
@@ -191,12 +204,12 @@ bool InitializeGeometry(MyGeometry *geometry)
 	// create an array buffer object for storing our vertices
 	glGenBuffers(1, &geometry->vertexBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
 	// create another one for storing our colours
 	glGenBuffers(1, &geometry->colourBuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, geometry->colourBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(colours), colours, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*colours.size(), &colours[0], GL_STATIC_DRAW);
 
 	// create a vertex array object encapsulating all our vertex attributes
 	glGenVertexArrays(1, &geometry->vertexArray);
@@ -253,6 +266,212 @@ void RenderScene(MyGeometry *geometry, MyShader *shader)
 	CheckGLErrors();
 }
 
+void update_display() {
+	vector<float> vertices;
+	vector<float> colours;
+
+	switch(current_state.scene) {
+			case QUAD:
+				// Curve 1
+				vertices.push_back(0.4);
+				vertices.push_back(0.4);
+				vertices.push_back(0.8);
+				vertices.push_back(-0.4);
+				vertices.push_back(0.0);
+				vertices.push_back(-0.4);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				// Curve 2
+				vertices.push_back(0.0);
+				vertices.push_back(-0.4);
+				vertices.push_back(-0.8);
+				vertices.push_back(-0.4);
+				vertices.push_back(-0.4);
+				vertices.push_back(0.4);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				// Curve 3
+				vertices.push_back(-0.4);
+				vertices.push_back(0.4);
+				vertices.push_back(0.0);
+				vertices.push_back(0.4);
+				vertices.push_back(0.4);
+				vertices.push_back(0.4);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				/* // Curve 3 */
+				vertices.push_back(0.48);
+				vertices.push_back(0.2);
+				vertices.push_back(1.0);
+				vertices.push_back(0.4);
+				vertices.push_back(0.52);
+				vertices.push_back(0.16);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				
+				bezier_deg = 3;
+				break;
+			case CUBIC:
+				float f = 0.11111;
+				// Curve 1
+				vertices.push_back(1.0*f);
+				vertices.push_back(1.0*f);
+				vertices.push_back(4.0*f);
+				vertices.push_back(0.0);
+				vertices.push_back(6.0*f);
+				vertices.push_back(2.0*f);
+				vertices.push_back(9.0*f);
+				vertices.push_back(1.0*f);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				// Curve 2
+				vertices.push_back(8.0*f);
+				vertices.push_back(2.0*f);
+				vertices.push_back(0.0*f);
+				vertices.push_back(8.0*f);
+				vertices.push_back(0.0*f);
+				vertices.push_back(-2.0*f);
+				vertices.push_back(8.0*f);
+				vertices.push_back(4.0*f);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				// Curve 3
+				vertices.push_back(5.0*f);
+				vertices.push_back(3.0*f);
+				vertices.push_back(3.0*f);
+				vertices.push_back(2.0*f);
+				vertices.push_back(3.0*f);
+				vertices.push_back(3.0*f);
+				vertices.push_back(5.0*f);
+				vertices.push_back(2.0*f);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				// Curve 4
+				vertices.push_back(3.0*f);
+				vertices.push_back(2.2*f);
+				vertices.push_back(3.5*f);
+				vertices.push_back(2.7*f);
+				vertices.push_back(3.5*f);
+				vertices.push_back(3.3*f);
+				vertices.push_back(3.0*f);
+				vertices.push_back(3.8*f);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				// Curve 5
+				vertices.push_back(2.8*f);
+				vertices.push_back(3.5*f);
+				vertices.push_back(2.4*f);
+				vertices.push_back(3.8*f);
+				vertices.push_back(2.4*f);
+				vertices.push_back(3.2*f);
+				vertices.push_back(2.8*f);
+				vertices.push_back(3.5*f);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+				colours.push_back(1);
+
+
+				bezier_deg = 4;
+				break;
+		}
+
+	if (!InitializeGeometry(&global_geo, vertices, colours))
+		cout << "Program failed to intialize geometry!" << endl;
+}
+
+
 // --------------------------------------------------------------------------
 // GLFW callback functions
 
@@ -266,8 +485,19 @@ void ErrorCallback(int error, const char* description)
 // handles keyboard input events
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	bool should_update_display = false;
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	} else if (key == GLFW_KEY_1 && action == GLFW_PRESS) {
+		current_state.scene = QUAD;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
+		current_state.scene = CUBIC;
+		should_update_display = true;}
+
+	if(should_update_display) {
+			update_display();
+	}
 }
 
 // ==========================================================================
@@ -275,6 +505,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 int main(int argc, char *argv[])
 {
+	current_state.scene = QUAD;
 	// initialize the GLFW windowing system
 	if (!glfwInit()) {
 		cout << "ERROR: GLFW failed to initialize, TERMINATING" << endl;
@@ -318,18 +549,19 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	// call function to create and fill buffers with geometry data
-	MyGeometry geometry;
-	if (!InitializeGeometry(&geometry))
-		cout << "Program failed to intialize geometry!" << endl;
 
-	glPatchParameteri(GL_PATCH_VERTICES, 3);
+	update_display();
 
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
+		glUseProgram(shader.program);
+		glPatchParameteri(GL_PATCH_VERTICES, bezier_deg);
+
+		GLint bezier = glGetUniformLocation(shader.program, "degree");
+		glUniform1ui(bezier, bezier_deg);
 		// call function to draw our scene
-		RenderScene(&geometry, &shader); //render scene with texture
+		RenderScene(&global_geo, &shader); //render scene with texture
 								
 		glfwSwapBuffers(window);
 
@@ -337,7 +569,7 @@ int main(int argc, char *argv[])
 	}
 
 	// clean up allocated resources before exit
-	DestroyGeometry(&geometry);
+	DestroyGeometry(&global_geo);
 	DestroyShaders(&shader);
 	glfwDestroyWindow(window);
 	glfwTerminate();
