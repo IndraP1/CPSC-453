@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <string>
 #include <iterator>
+#include "GlyphExtractor.h"
 #include <vector>
 
 // Specify that we want the OpenGL core profile before including GLFW headers
@@ -49,6 +50,9 @@ enum Scene
 {
 	QUAD,
 	CUBIC,
+	FONT1,
+	FONT2,
+	FONT3,
 };
 
 struct Coordinate
@@ -63,8 +67,10 @@ struct CurrentState
 };
 
 CurrentState current_state;
+GlyphExtractor extractor;
 
 float bezier_deg;
+float global_deg;
 
 struct MyShader
 {
@@ -258,15 +264,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(-0.4);
 		vertices.push_back(0.0);
 		vertices.push_back(-0.4);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -286,18 +283,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(-0.4);
 		vertices2.push_back(0.0);
 		vertices2.push_back(-0.4);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
 		// Curve 2
 		vertices.push_back(0.0);
 		vertices.push_back(-0.4);
@@ -305,15 +290,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(-0.4);
 		vertices.push_back(-0.4);
 		vertices.push_back(0.4);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -333,18 +309,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(-0.4);
 		vertices2.push_back(-0.4);
 		vertices2.push_back(0.4);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
 		// Curve 3
 		vertices.push_back(-0.4);
 		vertices.push_back(0.4);
@@ -352,15 +316,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(0.4);
 		vertices.push_back(0.4);
 		vertices.push_back(0.4);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -380,18 +335,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(0.4);
 		vertices2.push_back(0.4);
 		vertices2.push_back(0.4);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
 		// Curve 4
 		vertices.push_back(0.48);
 		vertices.push_back(0.2);
@@ -399,15 +342,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(0.4);
 		vertices.push_back(0.52);
 		vertices.push_back(0.16);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -427,18 +361,17 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(0.4);
 		vertices2.push_back(0.52);
 		vertices2.push_back(0.16);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
+
+		for (uint i = 0; i <= vertices.size(); i++) {
+			colours.push_back(0);
+			colours.push_back(1);
+			colours.push_back(0);
+		}
+		for (uint i = 0; i <= vertices2.size(); i++) {
+			colours2.push_back(0.5);
+			colours2.push_back(0.5);
+			colours2.push_back(0.5);
+		}
 	} else if (bezier_deg == 4) {
 		float f = 0.1;
 		// Curve 1
@@ -450,18 +383,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(2.0*f-0.5);
 		vertices.push_back(9.0*f-0.5);
 		vertices.push_back(1.0*f-0.5);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -488,21 +409,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(2.0*f-0.5);
 		vertices2.push_back(9.0*f-0.5);
 		vertices2.push_back(1.0*f-0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
 
 		// Curve 2
 		vertices.push_back(8.0*f-0.5);
@@ -513,18 +419,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(-2.0*f-0.5);
 		vertices.push_back(8.0*f-0.5);
 		vertices.push_back(4.0*f-0.5);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -551,21 +445,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(-2.0*f-0.5);
 		vertices2.push_back(8.0*f-0.5);
 		vertices2.push_back(4.0*f-0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
 		// Curve 3
 		vertices.push_back(5.0*f-0.5);
 		vertices.push_back(3.0*f-0.5);
@@ -575,18 +454,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(3.0*f-0.5);
 		vertices.push_back(5.0*f-0.5);
 		vertices.push_back(2.0*f-0.5);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -613,21 +480,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(3.0*f-0.5);
 		vertices2.push_back(5.0*f-0.5);
 		vertices2.push_back(2.0*f-0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
 		// Curve 4
 		vertices.push_back(3.0*f-0.5);
 		vertices.push_back(2.2*f-0.5);
@@ -637,18 +489,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(3.3*f-0.5);
 		vertices.push_back(3.0*f-0.5);
 		vertices.push_back(3.8*f-0.5);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -675,21 +515,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(3.3*f-0.5);
 		vertices2.push_back(3.0*f-0.5);
 		vertices2.push_back(3.8*f-0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
 		// Curve 5
 		vertices.push_back(2.8*f-0.5);
 		vertices.push_back(3.5*f-0.5);
@@ -699,18 +524,6 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices.push_back(3.2*f-0.5);
 		vertices.push_back(2.8*f-0.5);
 		vertices.push_back(3.5*f-0.5);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
-		colours.push_back(0);
-		colours.push_back(1);
-		colours.push_back(0);
 
 		colours3.push_back(1);
 		colours3.push_back(0);
@@ -737,21 +550,17 @@ void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, 
 		vertices2.push_back(3.2*f-0.5);
 		vertices2.push_back(2.8*f-0.5);
 		vertices2.push_back(3.5*f-0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
-		colours2.push_back(0.5);
+
+		for (uint i = 0; i <= vertices.size(); i++) {
+			colours.push_back(0);
+			colours.push_back(1);
+			colours.push_back(0);
+		}
+		for (uint i = 0; i <= vertices2.size(); i++) {
+			colours2.push_back(0.5);
+			colours2.push_back(0.5);
+			colours2.push_back(0.5);
+		}
 	}
 }
 
@@ -791,9 +600,9 @@ void RenderScene(MyGeometry *geometry, MyShader *shader)
 		glDrawArrays(GL_PATCHES, 0, geometry->elementCount);
 	}
 
-	/* glUseProgram(shader->program); */
-	/* glBindVertexArray(geometry->vertexArray); */
-	/* glDrawArrays(GL_PATCHES, 0, geometry->elementCount); */
+	glUseProgram(shader->program);
+	glBindVertexArray(geometry->vertexArray);
+	glDrawArrays(GL_PATCHES, 0, geometry->elementCount);
 
 	// reset state to default (no shader or geometry bound)
 	glBindVertexArray(0);
@@ -803,18 +612,113 @@ void RenderScene(MyGeometry *geometry, MyShader *shader)
 	CheckGLErrors();
 }
 
+float insert_char(vector<float>& vertices, char c, float advance) {
+	MyGlyph glyph = extractor.ExtractGlyph(c);
+	float scale = 0.6;
+
+	for (unsigned int contour_index = 0; contour_index < glyph.contours.size(); contour_index++) {   
+		MyContour contour = glyph.contours[contour_index];
+		for (unsigned int segment_index = 0; segment_index < contour.size(); segment_index++) {
+			MySegment segment = contour[segment_index];
+			for (unsigned i = 0; i <= segment.degree; i++) {
+				if (segment.degree == 1 && global_deg == 4) {
+					vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+					vertices.push_back((segment.y[i]) * scale);	
+					vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+					vertices.push_back((segment.y[i]) * scale);	
+				} else if (segment.degree == 1 && global_deg == 3) {
+					vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+					vertices.push_back((segment.y[i]) * scale);	
+					if (i == 0) {
+						vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+						vertices.push_back((segment.y[i]) * scale);	
+					}
+				} else {
+					vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+					vertices.push_back((segment.y[i]) * scale);	
+				}
+			}
+		}
+	}
+	return glyph.advance;
+}
 
 void update_display() {
-	/* vector<float> vertices; */
-	/* vector<float> colours; */
+	vector<float> vertices;
+	vector<float> colours;
 
 	switch(current_state.scene) {
 		case QUAD:
-				bezier_deg = 3;
+			bezier_deg = 3;
+			global_deg = 3;
+			break;
+		case CUBIC:
+			bezier_deg = 4;
+			global_deg = 4;
+			break;
+		case FONT1:
+			{
+				bezier_deg = 0;
+				global_deg = 4;
+				extractor.LoadFontFile("fonts/Inconsolata.otf");
+				float adv = insert_char(vertices, 'I', 0);
+				adv += insert_char(vertices, 'n', adv);
+				adv += insert_char(vertices, 'd', adv);
+				adv += insert_char(vertices, 'r', adv);
+				adv += insert_char(vertices, 'a', adv);
+				adv += insert_char(vertices, 'P', adv);
+
+				for (uint i = 0; i <= vertices.size(); i++) {
+					colours.push_back(1);
+					colours.push_back(1);
+					colours.push_back(1);
+				}
+				if (!InitializeGeometry(&global_geo, vertices, colours))
+					cout << "Program failed to intialize geometry!" << endl;
 				break;
-			case CUBIC:
-				bezier_deg = 4;
+			}
+		case FONT2:
+			{
+				bezier_deg = 0;
+				global_deg = 3;
+				extractor.LoadFontFile("fonts/Lora-Regular.ttf");
+				float adv = insert_char(vertices, 'I', 0);
+				adv += insert_char(vertices, 'n', adv);
+				adv += insert_char(vertices, 'd', adv);
+				adv += insert_char(vertices, 'r', adv);
+				adv += insert_char(vertices, 'a', adv);
+				adv += insert_char(vertices, 'P', adv);
+
+				for (uint i = 0; i <= vertices.size(); i++) {
+					colours.push_back(1);
+					colours.push_back(1);
+					colours.push_back(1);
+				}
+				if (!InitializeGeometry(&global_geo, vertices, colours))
+					cout << "Program failed to intialize geometry!" << endl;
 				break;
+			}
+		case FONT3:
+			{
+				bezier_deg = 0;
+				global_deg = 4;
+				extractor.LoadFontFile("fonts/SourceSansPro-Regular.otf");
+				float adv = insert_char(vertices, 'I', 0);
+				adv += insert_char(vertices, 'n', adv);
+				adv += insert_char(vertices, 'd', adv);
+				adv += insert_char(vertices, 'r', adv);
+				adv += insert_char(vertices, 'a', adv);
+				adv += insert_char(vertices, 'P', adv);
+
+				for (uint i = 0; i <= vertices.size(); i++) {
+					colours.push_back(1);
+					colours.push_back(1);
+					colours.push_back(1);
+				}
+				if (!InitializeGeometry(&global_geo, vertices, colours))
+					cout << "Program failed to intialize geometry!" << endl;
+				break;
+			}
 		}
 }
 
@@ -840,7 +744,20 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		should_update_display = true;
 	} else if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
 		current_state.scene = CUBIC;
-		should_update_display = true;}
+		should_update_display = true;
+	} else if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
+		current_state.scene = FONT1;
+		bezier_deg = 0;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_4 && action == GLFW_PRESS) {
+		current_state.scene = FONT2;
+		bezier_deg = 0;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_5 && action == GLFW_PRESS) {
+		current_state.scene = FONT3;
+		bezier_deg = 0;
+		should_update_display = true;
+	}
 
 	if(should_update_display) {
 			update_display();
@@ -903,10 +820,10 @@ int main(int argc, char *argv[])
 	while (!glfwWindowShouldClose(window))
 	{
 		glUseProgram(shader.program);
-		glPatchParameteri(GL_PATCH_VERTICES, bezier_deg);
+		glPatchParameteri(GL_PATCH_VERTICES, global_deg);
 
 		GLint bezier = glGetUniformLocation(shader.program, "degree");
-		glUniform1ui(bezier, bezier_deg);
+		glUniform1ui(bezier, global_deg);
 		// call function to draw our scene
 		RenderScene(&global_geo, &shader); //render scene with texture
 								
