@@ -13,6 +13,7 @@ layout(location = 1) in vec3 VertexColour;
 
 // output to be interpolated between vertices and passed to the fragment stage
 out vec3 tcColour;
+out vec3 Colour;
 
 void main()
 {
@@ -21,4 +22,5 @@ void main()
 
     // assign output colour to be interpolated
     tcColour = VertexColour;
+	Colour = VertexColour;
 }

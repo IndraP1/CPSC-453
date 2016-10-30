@@ -74,6 +74,7 @@ struct MyShader
 	GLuint  TES; 
 	GLuint  fragment;
 	GLuint  program;
+	GLuint  program2;
 
 	// initialize shader and program names to zero (OpenGL reserved value)
 	MyShader() : vertex(0), fragment(0), program(0)
@@ -98,6 +99,7 @@ bool InitializeShaders(MyShader *shader)
 
 	// link shader program
 	shader->program = LinkProgram(shader->vertex, shader->TCS, shader->TES, shader->fragment);
+	shader->program2 = LinkProgram(shader->vertex, 0, 0, shader->fragment);
 
 	// check for OpenGL errors and return false if error occurred
 	return !CheckGLErrors();
@@ -109,6 +111,7 @@ void DestroyShaders(MyShader *shader)
 	// unbind any shader programs and destroy shader objects
 	glUseProgram(0);
 	glDeleteProgram(shader->program);
+	glDeleteProgram(shader->program2);
 	glDeleteShader(shader->vertex);
 	glDeleteShader(shader->fragment);
 	glDeleteShader(shader->TCS); 
@@ -246,6 +249,512 @@ void DestroyGeometry(MyGeometry *geometry)
 // --------------------------------------------------------------------------
 // Rendering function that draws our scene to the frame buffer
 
+void create_vertices_colours(vector<float>& vertices, vector<float>& vertices2, vector<float>& colours, vector<float>& colours2, vector<float>& colours3) {
+	if (bezier_deg == 3) {
+		// Curve 1
+		vertices.push_back(0.4);
+		vertices.push_back(0.4);
+		vertices.push_back(0.8);
+		vertices.push_back(-0.4);
+		vertices.push_back(0.0);
+		vertices.push_back(-0.4);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(0.4);
+		vertices2.push_back(0.4);
+		vertices2.push_back(0.8);
+		vertices2.push_back(-0.4);
+		vertices2.push_back(0.8);
+		vertices2.push_back(-0.4);
+		vertices2.push_back(0.0);
+		vertices2.push_back(-0.4);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		// Curve 2
+		vertices.push_back(0.0);
+		vertices.push_back(-0.4);
+		vertices.push_back(-0.8);
+		vertices.push_back(-0.4);
+		vertices.push_back(-0.4);
+		vertices.push_back(0.4);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(0.0);
+		vertices2.push_back(-0.4);
+		vertices2.push_back(-0.8);
+		vertices2.push_back(-0.4);
+		vertices2.push_back(-0.8);
+		vertices2.push_back(-0.4);
+		vertices2.push_back(-0.4);
+		vertices2.push_back(0.4);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		// Curve 3
+		vertices.push_back(-0.4);
+		vertices.push_back(0.4);
+		vertices.push_back(0.0);
+		vertices.push_back(0.4);
+		vertices.push_back(0.4);
+		vertices.push_back(0.4);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(-0.4);
+		vertices2.push_back(0.4);
+		vertices2.push_back(0.0);
+		vertices2.push_back(0.4);
+		vertices2.push_back(0.0);
+		vertices2.push_back(0.4);
+		vertices2.push_back(0.4);
+		vertices2.push_back(0.4);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		// Curve 4
+		vertices.push_back(0.48);
+		vertices.push_back(0.2);
+		vertices.push_back(1.0);
+		vertices.push_back(0.4);
+		vertices.push_back(0.52);
+		vertices.push_back(0.16);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(0.48);
+		vertices2.push_back(0.2);
+		vertices2.push_back(1.0);
+		vertices2.push_back(0.4);
+		vertices2.push_back(1.0);
+		vertices2.push_back(0.4);
+		vertices2.push_back(0.52);
+		vertices2.push_back(0.16);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+	} else if (bezier_deg == 4) {
+		float f = 0.1;
+		// Curve 1
+		vertices.push_back(1.0*f-0.5);
+		vertices.push_back(1.0*f-0.5);
+		vertices.push_back(4.0*f-0.5);
+		vertices.push_back(0.0-0.8);
+		vertices.push_back(6.0*f-0.5);
+		vertices.push_back(2.0*f-0.5);
+		vertices.push_back(9.0*f-0.5);
+		vertices.push_back(1.0*f-0.5);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(1.0*f-0.5);
+		vertices2.push_back(1.0*f-0.5);
+		vertices2.push_back(4.0*f-0.5);
+		vertices2.push_back(0.0-0.8);
+		vertices2.push_back(4.0*f-0.5);
+		vertices2.push_back(0.0-0.8);
+		vertices2.push_back(6.0*f-0.5);
+		vertices2.push_back(2.0*f-0.5);
+		vertices2.push_back(6.0*f-0.5);
+		vertices2.push_back(2.0*f-0.5);
+		vertices2.push_back(9.0*f-0.5);
+		vertices2.push_back(1.0*f-0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+
+		// Curve 2
+		vertices.push_back(8.0*f-0.5);
+		vertices.push_back(2.0*f-0.5);
+		vertices.push_back(0.0*f-0.5);
+		vertices.push_back(8.0*f-0.5);
+		vertices.push_back(0.0*f-0.5);
+		vertices.push_back(-2.0*f-0.5);
+		vertices.push_back(8.0*f-0.5);
+		vertices.push_back(4.0*f-0.5);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(8.0*f-0.5);
+		vertices2.push_back(2.0*f-0.5);
+		vertices2.push_back(0.0*f-0.5);
+		vertices2.push_back(8.0*f-0.5);
+		vertices2.push_back(0.0*f-0.5);
+		vertices2.push_back(8.0*f-0.5);
+		vertices2.push_back(0.0*f-0.5);
+		vertices2.push_back(-2.0*f-0.5);
+		vertices2.push_back(0.0*f-0.5);
+		vertices2.push_back(-2.0*f-0.5);
+		vertices2.push_back(8.0*f-0.5);
+		vertices2.push_back(4.0*f-0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		// Curve 3
+		vertices.push_back(5.0*f-0.5);
+		vertices.push_back(3.0*f-0.5);
+		vertices.push_back(3.0*f-0.5);
+		vertices.push_back(2.0*f-0.5);
+		vertices.push_back(3.0*f-0.5);
+		vertices.push_back(3.0*f-0.5);
+		vertices.push_back(5.0*f-0.5);
+		vertices.push_back(2.0*f-0.5);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(5.0*f-0.5);
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(2.0*f-0.5);
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(2.0*f-0.5);
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(5.0*f-0.5);
+		vertices2.push_back(2.0*f-0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		// Curve 4
+		vertices.push_back(3.0*f-0.5);
+		vertices.push_back(2.2*f-0.5);
+		vertices.push_back(3.5*f-0.5);
+		vertices.push_back(2.7*f-0.5);
+		vertices.push_back(3.5*f-0.5);
+		vertices.push_back(3.3*f-0.5);
+		vertices.push_back(3.0*f-0.5);
+		vertices.push_back(3.8*f-0.5);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(2.2*f-0.5);
+		vertices2.push_back(3.5*f-0.5);
+		vertices2.push_back(2.7*f-0.5);
+		vertices2.push_back(3.5*f-0.5);
+		vertices2.push_back(2.7*f-0.5);
+		vertices2.push_back(3.5*f-0.5);
+		vertices2.push_back(3.3*f-0.5);
+		vertices2.push_back(3.5*f-0.5);
+		vertices2.push_back(3.3*f-0.5);
+		vertices2.push_back(3.0*f-0.5);
+		vertices2.push_back(3.8*f-0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		// Curve 5
+		vertices.push_back(2.8*f-0.5);
+		vertices.push_back(3.5*f-0.5);
+		vertices.push_back(2.4*f-0.5);
+		vertices.push_back(3.8*f-0.5);
+		vertices.push_back(2.4*f-0.5);
+		vertices.push_back(3.2*f-0.5);
+		vertices.push_back(2.8*f-0.5);
+		vertices.push_back(3.5*f-0.5);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+		colours.push_back(0);
+		colours.push_back(1);
+		colours.push_back(0);
+
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+		colours3.push_back(1);
+		colours3.push_back(1);
+		colours3.push_back(0);
+		colours3.push_back(0);
+
+		vertices2.push_back(2.8*f-0.5);
+		vertices2.push_back(3.5*f-0.5);
+		vertices2.push_back(2.4*f-0.5);
+		vertices2.push_back(3.8*f-0.5);
+		vertices2.push_back(2.4*f-0.5);
+		vertices2.push_back(3.8*f-0.5);
+		vertices2.push_back(2.4*f-0.5);
+		vertices2.push_back(3.2*f-0.5);
+		vertices2.push_back(2.4*f-0.5);
+		vertices2.push_back(3.2*f-0.5);
+		vertices2.push_back(2.8*f-0.5);
+		vertices2.push_back(3.5*f-0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+		colours2.push_back(0.5);
+	}
+}
+
 void RenderScene(MyGeometry *geometry, MyShader *shader)
 {
 	// clear screen to a dark grey colour
@@ -254,9 +763,37 @@ void RenderScene(MyGeometry *geometry, MyShader *shader)
 
 	// bind our shader program and the vertex array object containing our
 	// scene geometry, then tell OpenGL to draw our geometry
-	glUseProgram(shader->program);
-	glBindVertexArray(geometry->vertexArray);
-	glDrawArrays(GL_PATCHES, 0, geometry->elementCount);
+	if (bezier_deg != 0) {
+		vector<float> vertices;
+		vector<float> vertices2;
+		vector<float> colours;
+		vector<float> colours2;
+		vector<float> colours3;
+		create_vertices_colours(vertices, vertices2, colours, colours2, colours3);
+
+		glPointSize(4);
+		if (!InitializeGeometry(&global_geo, vertices, colours3))
+			cout << "Program failed to intialize geometry!" << endl;
+		glUseProgram(shader->program2);
+		glBindVertexArray(geometry->vertexArray);
+		glDrawArrays(GL_POINTS, 0, geometry->elementCount);
+
+		if (!InitializeGeometry(&global_geo, vertices2, colours2))
+			cout << "Program failed to intialize geometry!" << endl;
+		glUseProgram(shader->program2);
+		glBindVertexArray(geometry->vertexArray);
+		glDrawArrays(GL_LINES, 0, geometry->elementCount);
+
+		if (!InitializeGeometry(&global_geo, vertices, colours))
+			cout << "Program failed to intialize geometry!" << endl;
+		glUseProgram(shader->program);
+		glBindVertexArray(geometry->vertexArray);
+		glDrawArrays(GL_PATCHES, 0, geometry->elementCount);
+	}
+
+	/* glUseProgram(shader->program); */
+	/* glBindVertexArray(geometry->vertexArray); */
+	/* glDrawArrays(GL_PATCHES, 0, geometry->elementCount); */
 
 	// reset state to default (no shader or geometry bound)
 	glBindVertexArray(0);
@@ -266,209 +803,19 @@ void RenderScene(MyGeometry *geometry, MyShader *shader)
 	CheckGLErrors();
 }
 
+
 void update_display() {
-	vector<float> vertices;
-	vector<float> colours;
+	/* vector<float> vertices; */
+	/* vector<float> colours; */
 
 	switch(current_state.scene) {
-			case QUAD:
-				// Curve 1
-				vertices.push_back(0.4);
-				vertices.push_back(0.4);
-				vertices.push_back(0.8);
-				vertices.push_back(-0.4);
-				vertices.push_back(0.0);
-				vertices.push_back(-0.4);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				// Curve 2
-				vertices.push_back(0.0);
-				vertices.push_back(-0.4);
-				vertices.push_back(-0.8);
-				vertices.push_back(-0.4);
-				vertices.push_back(-0.4);
-				vertices.push_back(0.4);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				// Curve 3
-				vertices.push_back(-0.4);
-				vertices.push_back(0.4);
-				vertices.push_back(0.0);
-				vertices.push_back(0.4);
-				vertices.push_back(0.4);
-				vertices.push_back(0.4);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				/* // Curve 3 */
-				vertices.push_back(0.48);
-				vertices.push_back(0.2);
-				vertices.push_back(1.0);
-				vertices.push_back(0.4);
-				vertices.push_back(0.52);
-				vertices.push_back(0.16);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				
+		case QUAD:
 				bezier_deg = 3;
 				break;
 			case CUBIC:
-				float f = 0.11111;
-				// Curve 1
-				vertices.push_back(1.0*f);
-				vertices.push_back(1.0*f);
-				vertices.push_back(4.0*f);
-				vertices.push_back(0.0);
-				vertices.push_back(6.0*f);
-				vertices.push_back(2.0*f);
-				vertices.push_back(9.0*f);
-				vertices.push_back(1.0*f);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				// Curve 2
-				vertices.push_back(8.0*f);
-				vertices.push_back(2.0*f);
-				vertices.push_back(0.0*f);
-				vertices.push_back(8.0*f);
-				vertices.push_back(0.0*f);
-				vertices.push_back(-2.0*f);
-				vertices.push_back(8.0*f);
-				vertices.push_back(4.0*f);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				// Curve 3
-				vertices.push_back(5.0*f);
-				vertices.push_back(3.0*f);
-				vertices.push_back(3.0*f);
-				vertices.push_back(2.0*f);
-				vertices.push_back(3.0*f);
-				vertices.push_back(3.0*f);
-				vertices.push_back(5.0*f);
-				vertices.push_back(2.0*f);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				// Curve 4
-				vertices.push_back(3.0*f);
-				vertices.push_back(2.2*f);
-				vertices.push_back(3.5*f);
-				vertices.push_back(2.7*f);
-				vertices.push_back(3.5*f);
-				vertices.push_back(3.3*f);
-				vertices.push_back(3.0*f);
-				vertices.push_back(3.8*f);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				// Curve 5
-				vertices.push_back(2.8*f);
-				vertices.push_back(3.5*f);
-				vertices.push_back(2.4*f);
-				vertices.push_back(3.8*f);
-				vertices.push_back(2.4*f);
-				vertices.push_back(3.2*f);
-				vertices.push_back(2.8*f);
-				vertices.push_back(3.5*f);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-				colours.push_back(1);
-
-
 				bezier_deg = 4;
 				break;
 		}
-
-	if (!InitializeGeometry(&global_geo, vertices, colours))
-		cout << "Program failed to intialize geometry!" << endl;
 }
 
 
