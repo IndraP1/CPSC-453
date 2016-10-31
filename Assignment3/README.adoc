@@ -1,0 +1,32 @@
+= CPSC 453 Assignment 1 README
+
+== Student Info and Assignement Details
+
+Name: Mahindra Prasetyo
+
+The following code was not my own:
+
+- boilerplate.cpp was provided but heavily modified.
+- vertex.glsl, tessControl.glsl, and tessEval.glsl were provided but heavily modified.
+- GlyphExtractor.cpp, GlyphExtractor.h, makefile, and fragment.glsl were provided. All code in middleware directory were also provided.
+
+== Instructions
+
+In terminal, run the following commands:
+
+. `make`
+. `./boilerplate`
+. Use keys `1`, and `2` to switch between teapot and fish traces respectively.
+. Use keys `Q`, `W`, and `S`, to switch between fonts Pacifico, Lora, and SourceSansPro for the word "IndraP" respectively. 
+. Use keys `A`, `S`, and `D`, to switch between fonts Inconsolata, AlexBrush, and Pacifico for the scrolling phrase "The Quick Brown Fox Jumps Over The Lazy Dog."
+. Use key `Esc` to close the window.
+
+== Platform and Compiler Info
+
+- Fedora Release 24
+- gcc version 6.2.1 20160916 (Red Hat 6.2.1-2) (GCC) 
+- OpenGL version string: 4.5.0 NVIDIA 367.18
+
+
+
+
