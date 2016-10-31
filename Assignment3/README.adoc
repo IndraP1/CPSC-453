@@ -19,6 +19,7 @@ In terminal, run the following commands:
 . Use keys `1`, and `2` to switch between teapot and fish traces respectively.
 . Use keys `Q`, `W`, and `E`, to switch between fonts Pacifico, Lora, and SourceSansPro for the word "IndraP" respectively. 
 . Use keys `A`, `S`, and `D`, to switch between fonts Inconsolata, AlexBrush, and Pacifico for the scrolling phrase "The Quick Brown Fox Jumps Over The Lazy Dog."
+. Use keys `UP`, and `DOWN`, to increase or decrease the speed of the scrolling text.
 . Use key `Esc` to close the window.
 
 == Platform and Compiler Info

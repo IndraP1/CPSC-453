@@ -67,6 +67,7 @@ struct Coordinate
 struct CurrentState
 {
 	enum Scene scene;
+	int speed;
 };
 
 CurrentState current_state;
@@ -733,14 +734,20 @@ void update_display() {
 	}
 }
 
+float shift = -1.8;
 void scroll() {
 	vector<float> vertices;
 	vector<float> colours;
 	bezier_deg = 0;
-	float shift = glfwGetTime()/2-2.0;
-	if (shift >= 24)
-		glfwSetTime(0);
 	
+	shift += (current_state.speed*1.0/200);
+	if (current_state.scene == SCROLL1 && shift > 24) {	
+		shift = -1.8;
+	} else if (current_state.scene == SCROLL2 && shift > 20) {	
+		shift = -1.8;
+	} else if (current_state.scene == SCROLL3 && shift > 23) {	
+		shift = -1.8;
+	}
 	float adv = insert_char(vertices, 'T', 0, 0.6, shift);
 	adv += insert_char(vertices, 'h', adv, 0.6, shift);
 	adv += insert_char(vertices, 'e', adv, 0.6, shift);
@@ -845,6 +852,14 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		current_state.scene = SCROLL3;
 		bezier_deg = 0;
 		should_update_display = true;
+	} else if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+		if(current_state.speed + 1 < 8)
+			current_state.speed += 1;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+		if(current_state.speed - 1 > 0)
+			current_state.speed -= 1;
+		should_update_display = true;
 	}
 
 	if (should_update_display)
@@ -857,6 +872,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 int main(int argc, char *argv[])
 {
 	current_state.scene = QUAD;
+	current_state.speed = 1;
 	// initialize the GLFW windowing system
 	if (!glfwInit()) {
 		cout << "ERROR: GLFW failed to initialize, TERMINATING" << endl;
