@@ -53,6 +53,9 @@ enum Scene
 	FONT1,
 	FONT2,
 	FONT3,
+	SCROLL1,
+	SCROLL2,
+	SCROLL3,
 };
 
 struct Coordinate
@@ -612,9 +615,8 @@ void RenderScene(MyGeometry *geometry, MyShader *shader)
 	CheckGLErrors();
 }
 
-float insert_char(vector<float>& vertices, char c, float advance) {
+float insert_char(vector<float>& vertices, char c, float advance, float scale, float shift) {
 	MyGlyph glyph = extractor.ExtractGlyph(c);
-	float scale = 0.6;
 
 	for (unsigned int contour_index = 0; contour_index < glyph.contours.size(); contour_index++) {   
 		MyContour contour = glyph.contours[contour_index];
@@ -622,19 +624,19 @@ float insert_char(vector<float>& vertices, char c, float advance) {
 			MySegment segment = contour[segment_index];
 			for (unsigned i = 0; i <= segment.degree; i++) {
 				if (segment.degree == 1 && global_deg == 4) {
-					vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+					vertices.push_back((segment.x[i] + advance - shift) * scale);	
 					vertices.push_back((segment.y[i]) * scale);	
-					vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+					vertices.push_back((segment.x[i] + advance - shift) * scale);	
 					vertices.push_back((segment.y[i]) * scale);	
 				} else if (segment.degree == 1 && global_deg == 3) {
-					vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+					vertices.push_back((segment.x[i] + advance - shift) * scale);	
 					vertices.push_back((segment.y[i]) * scale);	
 					if (i == 0) {
-						vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+						vertices.push_back((segment.x[i] + advance - shift) * scale);	
 						vertices.push_back((segment.y[i]) * scale);	
 					}
 				} else {
-					vertices.push_back((segment.x[i] + advance - 1.5) * scale);	
+					vertices.push_back((segment.x[i] + advance - shift) * scale);	
 					vertices.push_back((segment.y[i]) * scale);	
 				}
 			}
@@ -659,14 +661,14 @@ void update_display() {
 		case FONT1:
 			{
 				bezier_deg = 0;
-				global_deg = 4;
-				extractor.LoadFontFile("fonts/Inconsolata.otf");
-				float adv = insert_char(vertices, 'I', 0);
-				adv += insert_char(vertices, 'n', adv);
-				adv += insert_char(vertices, 'd', adv);
-				adv += insert_char(vertices, 'r', adv);
-				adv += insert_char(vertices, 'a', adv);
-				adv += insert_char(vertices, 'P', adv);
+				global_deg = 3;
+				extractor.LoadFontFile("fonts/Pacifico.ttf");
+				float adv = insert_char(vertices, 'I', 0, 0.6, 1.5);
+				adv += insert_char(vertices, 'n', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'd', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'r', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'a', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'P', adv, 0.6, 1.5);
 
 				for (uint i = 0; i <= vertices.size(); i++) {
 					colours.push_back(1);
@@ -682,12 +684,12 @@ void update_display() {
 				bezier_deg = 0;
 				global_deg = 3;
 				extractor.LoadFontFile("fonts/Lora-Regular.ttf");
-				float adv = insert_char(vertices, 'I', 0);
-				adv += insert_char(vertices, 'n', adv);
-				adv += insert_char(vertices, 'd', adv);
-				adv += insert_char(vertices, 'r', adv);
-				adv += insert_char(vertices, 'a', adv);
-				adv += insert_char(vertices, 'P', adv);
+				float adv = insert_char(vertices, 'I', 0, 0.6, 1.5);
+				adv += insert_char(vertices, 'n', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'd', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'r', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'a', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'P', adv, 0.6, 1.5);
 
 				for (uint i = 0; i <= vertices.size(); i++) {
 					colours.push_back(1);
@@ -703,12 +705,12 @@ void update_display() {
 				bezier_deg = 0;
 				global_deg = 4;
 				extractor.LoadFontFile("fonts/SourceSansPro-Regular.otf");
-				float adv = insert_char(vertices, 'I', 0);
-				adv += insert_char(vertices, 'n', adv);
-				adv += insert_char(vertices, 'd', adv);
-				adv += insert_char(vertices, 'r', adv);
-				adv += insert_char(vertices, 'a', adv);
-				adv += insert_char(vertices, 'P', adv);
+				float adv = insert_char(vertices, 'I', 0, 0.6, 1.5);
+				adv += insert_char(vertices, 'n', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'd', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'r', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'a', adv, 0.6, 1.5);
+				adv += insert_char(vertices, 'P', adv, 0.6, 1.5);
 
 				for (uint i = 0; i <= vertices.size(); i++) {
 					colours.push_back(1);
@@ -719,9 +721,80 @@ void update_display() {
 					cout << "Program failed to intialize geometry!" << endl;
 				break;
 			}
-		}
+		case SCROLL1:
+			extractor.LoadFontFile("fonts/Inconsolata.otf");
+			break;
+		case SCROLL2:
+			extractor.LoadFontFile("fonts/AlexBrush-Regular.ttf");
+			break;
+		case SCROLL3:
+			extractor.LoadFontFile("fonts/Pacifico.ttf");
+			break;
+	}
 }
 
+void scroll() {
+	vector<float> vertices;
+	vector<float> colours;
+	bezier_deg = 0;
+	float shift = glfwGetTime()/2-2.0;
+	if (shift >= 24)
+		glfwSetTime(0);
+	
+	float adv = insert_char(vertices, 'T', 0, 0.6, shift);
+	adv += insert_char(vertices, 'h', adv, 0.6, shift);
+	adv += insert_char(vertices, 'e', adv, 0.6, shift);
+	adv += insert_char(vertices, ' ', adv, 0.6, shift);
+	adv += insert_char(vertices, 'Q', adv, 0.6, shift);
+	adv += insert_char(vertices, 'u', adv, 0.6, shift);
+	adv += insert_char(vertices, 'i', adv, 0.6, shift);
+	adv += insert_char(vertices, 'c', adv, 0.6, shift);
+	adv += insert_char(vertices, 'k', adv, 0.6, shift);
+	adv += insert_char(vertices, ' ', adv, 0.6, shift);
+	adv += insert_char(vertices, 'B', adv, 0.6, shift);
+	adv += insert_char(vertices, 'r', adv, 0.6, shift);
+	adv += insert_char(vertices, 'o', adv, 0.6, shift);
+	adv += insert_char(vertices, 'w', adv, 0.6, shift);
+	adv += insert_char(vertices, 'n', adv, 0.6, shift);
+	adv += insert_char(vertices, ' ', adv, 0.6, shift);
+	adv += insert_char(vertices, 'F', adv, 0.6, shift);
+	adv += insert_char(vertices, 'o', adv, 0.6, shift);
+	adv += insert_char(vertices, 'x', adv, 0.6, shift);
+	adv += insert_char(vertices, ' ', adv, 0.6, shift);
+	adv += insert_char(vertices, 'J', adv, 0.6, shift);
+	adv += insert_char(vertices, 'u', adv, 0.6, shift);
+	adv += insert_char(vertices, 'm', adv, 0.6, shift);
+	adv += insert_char(vertices, 'p', adv, 0.6, shift);
+	adv += insert_char(vertices, 's', adv, 0.6, shift);
+	adv += insert_char(vertices, ' ', adv, 0.6, shift);
+	adv += insert_char(vertices, 'O', adv, 0.6, shift);
+	adv += insert_char(vertices, 'v', adv, 0.6, shift);
+	adv += insert_char(vertices, 'e', adv, 0.6, shift);
+	adv += insert_char(vertices, 'r', adv, 0.6, shift);
+	adv += insert_char(vertices, ' ', adv, 0.6, shift);
+	adv += insert_char(vertices, 'T', adv, 0.6, shift);
+	adv += insert_char(vertices, 'h', adv, 0.6, shift);
+	adv += insert_char(vertices, 'e', adv, 0.6, shift);
+	adv += insert_char(vertices, ' ', adv, 0.6, shift);
+	adv += insert_char(vertices, 'L', adv, 0.6, shift);
+	adv += insert_char(vertices, 'a', adv, 0.6, shift);
+	adv += insert_char(vertices, 'z', adv, 0.6, shift);
+	adv += insert_char(vertices, 'y', adv, 0.6, shift);
+	adv += insert_char(vertices, ' ', adv, 0.6, shift);
+	adv += insert_char(vertices, 'D', adv, 0.6, shift);
+	adv += insert_char(vertices, 'o', adv, 0.6, shift);
+	adv += insert_char(vertices, 'g', adv, 0.6, shift);
+	adv += insert_char(vertices, '.', adv, 0.6, shift);
+
+	for (uint i = 0; i <= vertices.size(); i++) {
+		colours.push_back(1);
+		colours.push_back(1);
+		colours.push_back(1);
+	}
+
+	if (!InitializeGeometry(&global_geo, vertices, colours))
+		cout << "Program failed to intialize geometry!" << endl;
+}
 
 // --------------------------------------------------------------------------
 // GLFW callback functions
@@ -745,23 +818,37 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 	} else if (key == GLFW_KEY_2 && action == GLFW_PRESS) {
 		current_state.scene = CUBIC;
 		should_update_display = true;
-	} else if (key == GLFW_KEY_3 && action == GLFW_PRESS) {
+	} else if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
 		current_state.scene = FONT1;
 		bezier_deg = 0;
 		should_update_display = true;
-	} else if (key == GLFW_KEY_4 && action == GLFW_PRESS) {
+	} else if (key == GLFW_KEY_W && action == GLFW_PRESS) {
 		current_state.scene = FONT2;
 		bezier_deg = 0;
 		should_update_display = true;
-	} else if (key == GLFW_KEY_5 && action == GLFW_PRESS) {
+	} else if (key == GLFW_KEY_E && action == GLFW_PRESS) {
 		current_state.scene = FONT3;
+		bezier_deg = 0;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+		global_deg = 4;
+		current_state.scene = SCROLL1;
+		bezier_deg = 0;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+		global_deg = 3;
+		current_state.scene = SCROLL2;
+		bezier_deg = 0;
+		should_update_display = true;
+	} else if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+		global_deg = 3;
+		current_state.scene = SCROLL3;
 		bezier_deg = 0;
 		should_update_display = true;
 	}
 
-	if(should_update_display) {
-			update_display();
-	}
+	if (should_update_display)
+		update_display();
 }
 
 // ==========================================================================
@@ -825,6 +912,8 @@ int main(int argc, char *argv[])
 		GLint bezier = glGetUniformLocation(shader.program, "degree");
 		glUniform1ui(bezier, global_deg);
 		// call function to draw our scene
+		if (current_state.scene == SCROLL1 || current_state.scene == SCROLL2 || current_state.scene == SCROLL3)
+			scroll();
 		RenderScene(&global_geo, &shader); //render scene with texture
 								
 		glfwSwapBuffers(window);
