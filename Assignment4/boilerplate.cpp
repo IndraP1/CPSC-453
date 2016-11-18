@@ -218,9 +218,11 @@ bool intersectSphere(const vec3& c, float r, float x, float y, float z) {
 	float A = dot(d, d);
 	float B = 2*dot(d, (o-c));
 	float C = (dot((o-c), (o-c))-pow(r,2));
-
-	if (B < 0)
+	
+	float poly = pow(B,2)-(4*A*C);
+	if (poly < 0) {
 		return false;
+	}
 	return true;
 }
 
@@ -229,23 +231,23 @@ void renderSphere() {
 	vec3 center(0.9, -1.925, -6.69);
 	float radius = 0.825;
 
-	ray.z = 1773; // tan(60)*1024
+	ray.z = -577.35; // tan(120)*1024
 
-
-	for (int x = 0; x <= img.Width(); x++) {
-		for (int y = 0; y <= img.Height(); y++) {
-			ray.x = float(x) / float(img.Width());
-			ray.x *= 2;
-			ray.x -= 1;
-			ray.y = float(y) / float(img.Width());
-			ray.y *= 2;
-			ray.y -= 1;
-			ray.z = 1;
+	for (int x = 0; x < img.Width(); x++) {
+		for (int y = 0; y < img.Height(); y++) {
+			ray.x = -1*(img.Width()/2.f - 0.5f)+x;
+			ray.y = -1*(img.Height()/2.f - 0.5f)+y;
 			vec3 colour(0, 0, 0);
 
-			if (intersectSphere(center, radius, x, y, ray.z)) {
-				vec3 colour(1, 1, 1);
+			if (intersectSphere(center, radius, ray.x, ray.y, ray.z)) {
+				colour.x = 1;
+				colour.y = 1;
+				colour.z = 1;
 			}
+			/* vec3 rayNorm(ray.x, ray.y, ray.z); */
+			/* rayNorm = normalize(rayNorm); */
+
+			/* vec3 colour(rayNorm.x, rayNorm.y, rayNorm.z); */
 			img.SetPixel(x, y, colour);
 		}
 	}
@@ -312,7 +314,7 @@ int main(int argc, char *argv[])
 	MyGeometry geometry;
 	if (!InitializeGeometry(&geometry))
 		cout << "Program failed to intialize geometry!" << endl;
-	/* renderSphere(); */
+	renderSphere();
 	/* coord3D ray; */
 	/* coord3D origin = {0,0,0}; */
 
