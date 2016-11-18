@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <string>
 #include <iterator>
+#include <math.h>
 #include <glm/glm.hpp>
 #include "ImageBuffer.h"
 
@@ -27,12 +28,14 @@
 #endif
 #include <GLFW/glfw3.h>
 
+using namespace glm;
 using namespace std;
 // --------------------------------------------------------------------------
 // OpenGL utility and support function prototypes
 
 void QueryGLVersion();
 bool CheckGLErrors();
+ImageBuffer img;
 
 string LoadSource(const string &filename);
 GLuint CompileShader(GLenum shaderType, const string &source);
@@ -51,6 +54,12 @@ struct MyShader
 	// initialize shader and program names to zero (OpenGL reserved value)
 	MyShader() : vertex(0), fragment(0), program(0)
 	{}
+};
+
+struct coord3D {
+	float x;
+	float y;
+	float z;
 };
 
 // load, compile, and link shaders, returning true if successful
@@ -202,6 +211,51 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
+bool intersectSphere(const vec3& c, float r, float x, float y, float z) {
+	/* ddt^2 + 2d(o-c) + (o-c)*(o-c) -R^2 = 0 */
+	vec3 o(0, 0, 0);	
+	vec3 d(x, y, z);
+	float A = dot(d, d);
+	float B = 2*dot(d, (o-c));
+	float C = (dot((o-c), (o-c))-pow(r,2));
+
+	if (B < 0)
+		return false;
+	return true;
+}
+
+void renderSphere() {
+	coord3D ray;
+	vec3 center(0.9, -1.925, -6.69);
+	float radius = 0.825;
+
+	ray.z = 1773; // tan(60)*1024
+
+
+	for (int x = 0; x <= img.Width(); x++) {
+		for (int y = 0; y <= img.Height(); y++) {
+			ray.x = float(x) / float(img.Width());
+			ray.x *= 2;
+			ray.x -= 1;
+			ray.y = float(y) / float(img.Width());
+			ray.y *= 2;
+			ray.y -= 1;
+			ray.z = 1;
+			vec3 colour(0, 0, 0);
+
+			if (intersectSphere(center, radius, x, y, ray.z)) {
+				vec3 colour(1, 1, 1);
+			}
+			img.SetPixel(x, y, colour);
+		}
+	}
+}
+// print a vec3
+void printVec3(const char* prefix, const vec3& v)
+{
+    cout << prefix << " (" << v.x << ", " << v.y << ", " << v.z << ")" << endl;
+}
+
 // ==========================================================================
 // PROGRAM ENTRY POINT
 
@@ -220,7 +274,7 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	window = glfwCreateWindow(1024, 768, "CPSC 453 OpenGL Boilerplate", 0, 0);
+	window = glfwCreateWindow(1024, 1024, "CPSC 453 OpenGL Boilerplate", 0, 0);
 	if (!window) {
 		cout << "Program failed to create GLFW window, TERMINATING" << endl;
 		glfwTerminate();
@@ -249,15 +303,37 @@ int main(int argc, char *argv[])
 		cout << "Program could not initialize shaders, TERMINATING" << endl;
 		return -1;
 	}
+	if (!img.Initialize()) {
+		cout << "ImageBuffer could not be initialized, TERMINATING" << endl;
+		return -1;
+	}
 
 	// call function to create and fill buffers with geometry data
 	MyGeometry geometry;
 	if (!InitializeGeometry(&geometry))
 		cout << "Program failed to intialize geometry!" << endl;
+	/* renderSphere(); */
+	/* coord3D ray; */
+	/* coord3D origin = {0,0,0}; */
 
+	/* for (int x = 0; x < img.Width(); x++) { */
+	/* 	for (int y = 0; y < img.Height(); y++) { */
+	/* 		ray.x = float(x) / float(img.Width()); */
+	/* 		ray.x *= 2; */
+	/* 		ray.x -= 1; */
+	/* 		ray.y = float(y) / float(img.Width()); */
+	/* 		ray.y *= 2; */
+	/* 		ray.y -= 1; */
+	/* 		ray.z = 1; */
+
+	/* 		vec3 colour(abs(ray.x), abs(ray.y), ray.z); */
+	/* 		img.SetPixel(x, y, colour); */
+	/* 	} */
+	/* } */
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
+		img.Render();
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
@@ -265,6 +341,7 @@ int main(int argc, char *argv[])
 	// clean up allocated resources before exit
 	DestroyGeometry(&geometry);
 	DestroyShaders(&shader);
+	img.Destroy();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
