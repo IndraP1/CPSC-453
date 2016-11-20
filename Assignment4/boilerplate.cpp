@@ -265,7 +265,7 @@ bool intersectSphere(Sphere& cr, vec3& d, vec3& o) {
 	}
 	float t = (-B + sqrt(quad))/(2*A);
 	cr.intersect = o + t*d;
-	cr.n = cr.intersect = cr.c;
+	cr.n = cr.intersect - cr.c;
 	cr.intmag = length(cr.intersect);
 	
 	return true;
@@ -320,7 +320,7 @@ void initializeTriangle(Triangle& t) {
 }
 
 
-bool intersectTriangle(Triangle& tr, vec3&d, vec3& o) {
+bool intersectTriangle(Triangle& tr, vec3& d, vec3& o) {
 	initializeTrianglePlane(tr);
 	float t = intersectPlane(tr.pl, d, o);
 	if (t == 0)
@@ -333,6 +333,43 @@ bool intersectTriangle(Triangle& tr, vec3&d, vec3& o) {
 	tr.intersect = o + t*d; 
 	tr.intmag = length(tr.intersect);
 	return true;
+}
+
+// print a vec3
+void printVec3(const char* prefix, const vec3& v)
+{
+    cout << prefix << " (" << v.x << ", " << v.y << ", " << v.z << ")" << endl;
+}
+
+void shading(vec3& colour, vec3& n, Light& lightpoint, vec3& intersect, vec3& d) {
+	/* float cr = 0.5; */
+	/* float cp = 0.7; */
+	float p = 256;
+	float cl = 1;
+	float ca = 0.25;
+	vec3 l(lightpoint.p - intersect);
+	vec3 origin(0, 0, 0);
+	lightpoint.intensity = ca + cl*dot(normalize(n), (normalize(l)));
+
+	vec3 d_hat(normalize(d));
+	vec3 n_hat(normalize(n));
+	vec3 l_hat(normalize(l));
+	vec3 ref(reflect(l_hat, n_hat));
+	/* printVec3("h", h); */
+	
+	vec3 cp(colour);
+	colour.x *= lightpoint.intensity;  
+	if(dot(d_hat, ref) < 0) {
+		colour.x += cl*cp.x*pow(dot(d_hat,ref), p);
+	}
+	colour.y *= lightpoint.intensity;
+	if(dot(d_hat, ref) < 0) {
+		colour.y += cl*cp.y*pow(dot(d_hat,ref), p);
+	}
+	colour.z *= lightpoint.intensity;
+	if(dot(d_hat, ref) < 0) {
+		colour.z += cl*cp.z*pow(dot(d_hat,ref), p);
+	}
 }
 
 void renderShapes() {
@@ -432,46 +469,49 @@ void renderShapes() {
 			vec3 colour(0, 0, 0);
 			vec3 d(ray.x, ray.y, ray.z);
 
-			if (intersectPlane(pl, d, origin) > 0.f) {
+			if (intersectPlane(pl, d, origin) != 0.f) {
 				if(pl.intmag < closest_mag) {
 					closest_mag = pl.intmag;
-					l.intensity = dot(normalize(pl.n), (normalize(l.p-pl.intersect)));
-					colour.x = 1*l.intensity;
-					colour.y = 1*l.intensity;
-					colour.z = 1*l.intensity;
+					/* l.intensity = dot(normalize(pl.n), (normalize(l.p-pl.intersect))); */
+					colour.x = 0.5;
+					colour.y = 0.5;
+					colour.z = 0.5;
+					shading(colour, pl.n, l, pl.intersect, d);
 				}
 			}
 			for (uint i = 0; i < sizeof(bluepyramid)/sizeof(Triangle); i++) {
-				if (intersectTriangle(bluepyramid[i], d, origin) > 0.f) {
+				if (intersectTriangle(bluepyramid[i], d, origin)) {
 					if(bluepyramid[i].intmag < closest_mag) {
 						closest_mag = bluepyramid[i].intmag;
-						l.intensity = dot(normalize(bluepyramid[i].pl.n), (normalize(l.p-bluepyramid[i].intersect)));
 						colour.x = 0;
 						colour.y = 0;
-						colour.z = 1*l.intensity;
+						colour.z = 0.7;
+						shading(colour, bluepyramid[i].pl.n, l, bluepyramid[i].intersect, d);
 					}
 				}
 			}
 			for (uint i = 0; i < sizeof(floor)/sizeof(Triangle); i++) {
-				if (intersectTriangle(floor[i], d, origin) > 0.f) {
+				if (intersectTriangle(floor[i], d, origin)) {
 					if(floor[i].intmag < closest_mag) {
 						closest_mag = floor[i].intmag;
-						l.intensity = dot(normalize(floor[i].pl.n), (normalize(l.p-floor[i].intersect)));
-						colour.x = 0.3*l.intensity;
-						colour.y = 0.3*l.intensity;
-						colour.z = 0.3*l.intensity;
+						/* l.intensity = dot(normalize(floor[i].pl.n), (normalize(l.p-floor[i].intersect))); */
+						colour.x = 0.3;
+						colour.y = 0.3;
+						colour.z = 0.3;
+						shading(colour, floor[i].pl.n, l, floor[i].intersect, d);
 					}
 				}
 			}
 
 			for (uint i = 0; i < sizeof(ceiling)/sizeof(Triangle); i++) {
-				if (intersectTriangle(ceiling[i], d, origin) > 0.f) {
+				if (intersectTriangle(ceiling[i], d, origin)) {
 					if(ceiling[i].intmag < closest_mag) {
 						closest_mag = ceiling[i].intmag;
-						l.intensity = dot(normalize(ceiling[i].pl.n), (normalize(l.p-ceiling[i].intersect)));
-						colour.x = 0.3*l.intensity;
-						colour.y = 0.3*l.intensity;
-						colour.z = 0.3*l.intensity;
+						/* l.intensity = dot(normalize(ceiling[i].pl.n), (normalize(l.p-ceiling[i].intersect))); */
+						colour.x = 0.3;
+						colour.y = 0.3;
+						colour.z = 0.3;
+						shading(colour, ceiling[i].pl.n, l, ceiling[i].intersect, d);
 					}
 				}
 			}
@@ -480,43 +520,40 @@ void renderShapes() {
 				if (intersectTriangle(greenwall[i], d, origin)) {
 					if(greenwall[i].intmag < closest_mag) {
 						closest_mag = greenwall[i].intmag;
-						l.intensity = dot(normalize(greenwall[i].pl.n), (normalize(l.p-greenwall[i].intersect)));
+						/* l.intensity = dot(normalize(greenwall[i].pl.n), (normalize(l.p-greenwall[i].intersect))); */
 						colour.x = 0;
-						colour.y = 1*l.intensity;
+						colour.y = 0.5;
 						colour.z = 0;
+						shading(colour, greenwall[i].pl.n, l, greenwall[i].intersect, d);
 					}
 				}
 			}
 
 			for (uint i = 0; i < sizeof(redwall)/sizeof(Triangle); i++) {
-				if (intersectTriangle(redwall[i], d, origin) > 0.f) {
+				if (intersectTriangle(redwall[i], d, origin)) {
 					if(redwall[i].intmag < closest_mag) {
 						closest_mag = redwall[i].intmag;
-						l.intensity = dot(normalize(redwall[i].pl.n), (normalize(l.p-redwall[i].intersect)));
-						colour.x = 1*l.intensity;
+						/* l.intensity = dot(normalize(redwall[i].pl.n), (normalize(l.p-redwall[i].intersect))); */
+						colour.x = 0.5;
 						colour.y = 0;
 						colour.z = 0;
+						shading(colour, redwall[i].pl.n, l, redwall[i].intersect, d);
 					}
 				}
 			}
 			if (intersectSphere(cr, d, origin)) {
 				if(cr.intmag < closest_mag) {
 					closest_mag = cr.intmag;
-					l.intensity = dot(normalize(cr.n), (normalize(l.p-cr.intersect)));
-					colour.x = 0.5*l.intensity;
-					colour.y = 0.5*l.intensity;
-					colour.z = 0.5*l.intensity;
-					cout << l.intensity << endl;
+					/* l.intensity = dot(normalize(cr.n), (normalize(l.p-cr.intersect))); */
+					colour.x = 0.5;
+					colour.y = 0.5;
+					colour.z = 0.5;
+					shading(colour, cr.n, l, cr.intersect, d);
 				}
 			}
 			img.SetPixel(x, y, colour);
 		}
 	}
-}
-// print a vec3
-void printVec3(const char* prefix, const vec3& v)
-{
-    cout << prefix << " (" << v.x << ", " << v.y << ", " << v.z << ")" << endl;
 }
 
 // ==========================================================================
