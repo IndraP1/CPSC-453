@@ -214,6 +214,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 struct Plane {
 	vec3 p;
 	vec3 n;
+	vec3 colour;
 
 	vec3 intersect;
 	float intmag;
@@ -228,6 +229,7 @@ struct Light {
 struct Sphere {
 	vec3 c;
 	float r;
+	vec3 colour;
 
 	vec3 n;
 	vec3 intersect;
@@ -240,6 +242,7 @@ struct Triangle {
 	vec3 p1;
 	vec3 p2;
 	vec3 px;
+	vec3 colour;
 
 	float a;
 	float a0;
@@ -264,7 +267,8 @@ bool intersectSphere(Sphere& cr, vec3& d, vec3& o) {
 		return false;
 	}
 	float t = (-B + sqrt(quad))/(2*A);
-	cr.intersect = o + t*d;
+
+		cr.intersect = o + t*d;
 	cr.n = cr.intersect - cr.c;
 	cr.intmag = length(cr.intersect);
 	
@@ -342,8 +346,6 @@ void printVec3(const char* prefix, const vec3& v)
 }
 
 void shading(vec3& colour, vec3& n, Light& lightpoint, vec3& intersect, vec3& d) {
-	/* float cr = 0.5; */
-	/* float cp = 0.7; */
 	float p = 256;
 	float cl = 1;
 	float ca = 0.25;
@@ -372,6 +374,68 @@ void shading(vec3& colour, vec3& n, Light& lightpoint, vec3& intersect, vec3& d)
 	}
 }
 
+void checkShadow1(vec3& intercept, vec3& colours, Light& lightpoint, Triangle bluepyramid[], Sphere& sphere) {
+	vec3 l(lightpoint.p - intercept);
+
+	for (uint i = 0; i <= 4; i++) {
+		if (intersectTriangle(bluepyramid[i], l, intercept)) {
+			colours.x = 0.1;
+			colours.y = 0.1;
+			colours.z = 0.1;
+		}
+	}	
+
+	if (intersectSphere(sphere, l, intercept)) {
+		colours.x = 0.1;
+		colours.y = 0.1;
+		colours.z = 0.1;
+	}
+}
+
+void scene_reflect1(int obj, vec3& d, vec3& n, vec3& intersect, vec3& colour, Sphere& cr, Plane& pl, Triangle bluepyramid[], Triangle ceiling[],
+		Triangle redwall[], Triangle greenwall[], Triangle floor[]) {
+	vec3 r(reflect(d, n));	
+	for (uint i = 0; i <= 2; i++) {
+		if (intersectTriangle(greenwall[i], r, intersect)) {
+			colour.x = greenwall[i].colour.x;
+			colour.y = greenwall[i].colour.y;
+			colour.z = greenwall[i].colour.z;
+		}
+	}	
+	for (uint i = 0; i <= 2; i++) {
+		if (intersectTriangle(redwall[i], r, intersect)) {
+			colour.x = redwall[i].colour.x;
+			colour.y = redwall[i].colour.y;
+			colour.z = redwall[i].colour.z;
+		}
+	}	
+	for (uint i = 0; i <= 2; i++) {
+		if (intersectTriangle(floor[i], r, intersect)) {
+			colour.x = floor[i].colour.x;
+			colour.y = floor[i].colour.y;
+			colour.z = floor[i].colour.z;
+		}
+	}	
+	
+	if(obj == 2) {
+		for (uint i = 0; i <= 4; i++) {
+			if (intersectTriangle(bluepyramid[i], r, intersect)) {
+				colour.x = bluepyramid[i].colour.x;
+				colour.y = bluepyramid[i].colour.y;
+				colour.z = bluepyramid[i].colour.z;
+			}
+		}	
+	}
+
+	if (obj == 1) {
+		if (intersectSphere(cr, r, intersect)) {
+			colour.x = cr.colour.x;
+			colour.y = cr.colour.y;
+			colour.z = cr.colour.z;
+		}
+	}
+}
+
 void renderShapes() {
 	coord3D ray;
 	vec3 origin(0, 0, 0);
@@ -379,6 +443,7 @@ void renderShapes() {
 	Sphere cr;
 	cr.c = {0.9, -1.925, -6.69};
 	cr.r = 0.825;
+	cr.colour = {0.5, 0.5, 0.5};
 
 	// Light 
 	Light l;
@@ -388,27 +453,32 @@ void renderShapes() {
 	Plane pl;
 	pl.p = {0, 0, -10.5};
 	pl.n = {0, 0, 1};
+	pl.colour = {0.5, 0.5, 0.5};
 
 	// Blue triangle
 	Triangle bt1;
 	bt1.p0 = {-0.4, -2.75, -9.55};
 	bt1.p1 = {-0.93, 0.55, -8.51};
 	bt1.p2 = {0.11, -2.75, -7.98};
+	bt1.colour = {0, 0, 0.7};
 
 	Triangle bt2;
 	bt2.p0 = { 0.11, -2.75, -7.98};
 	bt2.p1 = {-0.93, 0.55, -8.51};
 	bt2.p2 = {-1.46, -2.75, -7.47};
+	bt2.colour = {0, 0, 0.7};
 
 	Triangle bt3;
 	bt3.p0 = {-1.46, -2.75, -7.47};
 	bt3.p1 = {-0.93, 0.55, -8.51};
 	bt3.p2 = {-1.97, -2.75, -9.04};
+	bt3.colour = {0, 0, 0.7};
 
 	Triangle bt4;
 	bt4.p0 = {-1.97, -2.75, -9.04};
 	bt4.p1 = {-0.93, 0.55, -8.51};
 	bt4.p2 = {-0.4, -2.75, -9.55};
+	bt4.colour = {0, 0, 0.7};
 	Triangle bluepyramid[4] = {bt1, bt2, bt3, bt4};
 
 	// Ceiling
@@ -416,11 +486,13 @@ void renderShapes() {
 	c1.p0 = { 2.75, 2.75, -10.5};
 	c1.p1 = { 2.75, 2.75, -5};
 	c1.p2 = { -2.75, 2.75, -5};
+	c1.colour = {0.3, 0.3, 0.3};
 
 	Triangle c2;
 	c2.p0 = { -2.75, 2.75, -10.5};
 	c2.p1 = { 2.75, 2.75, -10.5};
 	c2.p2 = { -2.75, 2.75, -5};
+	c2.colour = {0.3, 0.3, 0.3};
 	Triangle ceiling[2] = {c1, c2};
 
 	/* Green wall on right */ 
@@ -428,11 +500,13 @@ void renderShapes() {
 	gw1.p0 = {2.75, 2.75, -5};
 	gw1.p1 = {2.75, 2.75, -10.5};
 	gw1.p2 = {2.75, -2.75, -10.5};
+	gw1.colour = {0, 0.5, 0};
 
 	Triangle gw2;
 	gw2.p0 = {2.75, -2.75, -5};
 	gw2.p1 = {2.75, 2.75, -5};
 	gw2.p2 = {2.75, -2.75, -10.5};
+	gw2.colour = {0, 0.5, 0};
 	Triangle greenwall[2] = {gw1, gw2};
 
 	/* Red wall on left */
@@ -440,11 +514,13 @@ void renderShapes() {
 	rw1.p0 = {-2.75, -2.75, -5};
 	rw1.p1 = {-2.75, -2.75, -10.5};
 	rw1.p2 = {-2.75, 2.75, -10.5};
+	rw1.colour = {0.5, 0, 0};
 
 	Triangle rw2;
 	rw2.p0 = {-2.75, 2.75, -5};
 	rw2.p1 = {-2.75, -2.75, -5};
 	rw2.p2 = {-2.75, 2.75, -10.5};
+	rw2.colour = {0.5, 0, 0};
 	Triangle redwall[2] = {rw1, rw2};
 
 	/* Floor */
@@ -452,14 +528,16 @@ void renderShapes() {
 	f1.p0 = {2.75, -2.75, -5};
 	f1.p1 = {2.75, -2.75, -10.5};
 	f1.p2 = {-2.75, -2.75, -10.5};
+	f1.colour = {0.3, 0.3, 0.3};
 
 	Triangle f2;
 	f2.p0 = {-2.75, -2.75, -5};
 	f2.p1 = {2.75, -2.75, -5};
 	f2.p2 = {-2.75, -2.75, -10.5};
+	f2.colour = {0.3, 0.3, 0.3};
 
 	Triangle floor[2] = {f1, f2};
-	ray.z = -950;// tan(120)*1024
+	ray.z = -950;
 
 	for (int x = 0; x < img.Width(); x++) {
 		for (int y = 0; y < img.Height(); y++) {
@@ -472,7 +550,6 @@ void renderShapes() {
 			if (intersectPlane(pl, d, origin) != 0.f) {
 				if(pl.intmag < closest_mag) {
 					closest_mag = pl.intmag;
-					/* l.intensity = dot(normalize(pl.n), (normalize(l.p-pl.intersect))); */
 					colour.x = 0.5;
 					colour.y = 0.5;
 					colour.z = 0.5;
@@ -486,6 +563,7 @@ void renderShapes() {
 						colour.x = 0;
 						colour.y = 0;
 						colour.z = 0.7;
+						scene_reflect1(1, d, bluepyramid[i].pl.n, bluepyramid[i].intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor);
 						shading(colour, bluepyramid[i].pl.n, l, bluepyramid[i].intersect, d);
 					}
 				}
@@ -494,11 +572,11 @@ void renderShapes() {
 				if (intersectTriangle(floor[i], d, origin)) {
 					if(floor[i].intmag < closest_mag) {
 						closest_mag = floor[i].intmag;
-						/* l.intensity = dot(normalize(floor[i].pl.n), (normalize(l.p-floor[i].intersect))); */
 						colour.x = 0.3;
 						colour.y = 0.3;
 						colour.z = 0.3;
 						shading(colour, floor[i].pl.n, l, floor[i].intersect, d);
+						checkShadow1(floor[i].intersect, colour, l, bluepyramid, cr);
 					}
 				}
 			}
@@ -507,7 +585,6 @@ void renderShapes() {
 				if (intersectTriangle(ceiling[i], d, origin)) {
 					if(ceiling[i].intmag < closest_mag) {
 						closest_mag = ceiling[i].intmag;
-						/* l.intensity = dot(normalize(ceiling[i].pl.n), (normalize(l.p-ceiling[i].intersect))); */
 						colour.x = 0.3;
 						colour.y = 0.3;
 						colour.z = 0.3;
@@ -520,7 +597,6 @@ void renderShapes() {
 				if (intersectTriangle(greenwall[i], d, origin)) {
 					if(greenwall[i].intmag < closest_mag) {
 						closest_mag = greenwall[i].intmag;
-						/* l.intensity = dot(normalize(greenwall[i].pl.n), (normalize(l.p-greenwall[i].intersect))); */
 						colour.x = 0;
 						colour.y = 0.5;
 						colour.z = 0;
@@ -533,7 +609,6 @@ void renderShapes() {
 				if (intersectTriangle(redwall[i], d, origin)) {
 					if(redwall[i].intmag < closest_mag) {
 						closest_mag = redwall[i].intmag;
-						/* l.intensity = dot(normalize(redwall[i].pl.n), (normalize(l.p-redwall[i].intersect))); */
 						colour.x = 0.5;
 						colour.y = 0;
 						colour.z = 0;
@@ -544,11 +619,330 @@ void renderShapes() {
 			if (intersectSphere(cr, d, origin)) {
 				if(cr.intmag < closest_mag) {
 					closest_mag = cr.intmag;
-					/* l.intensity = dot(normalize(cr.n), (normalize(l.p-cr.intersect))); */
 					colour.x = 0.5;
 					colour.y = 0.5;
 					colour.z = 0.5;
+					scene_reflect1(2, d, cr.n, cr.intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor);
 					shading(colour, cr.n, l, cr.intersect, d);
+				}
+			}
+			img.SetPixel(x, y, colour);
+		}
+	}
+}
+
+void renderShapes2() {
+	coord3D ray;
+	ray.z = -950;
+	vec3 origin(0, 0, 0);
+
+	Light l;
+	l.p = {4, 6, 1};
+
+	Plane pl;
+	pl.p = {0, 1, 0};
+	pl.n = {0, -1, 0};
+	pl.colour = {0.5, 0.3, 0};
+
+	Plane pl2;
+	pl2.p = {0, 0, 1};
+	pl2.n = {0, 0, -12};
+	pl2.colour = {0.5, 0.5, 0.5};
+
+	/* # Large yellow sphere */
+	Sphere yellow_sp;
+	yellow_sp.c = {1, -0.5, -3.5};
+	yellow_sp.r = 0.5;
+	yellow_sp.colour = {0, 0.5, 0.5};
+
+	/* # Reflective grey sphere */
+	Sphere grey_sp;
+	grey_sp.c = {0, 1, -5};
+	grey_sp.r = 0.4;
+	grey_sp.colour = {0.5, 0.5, 0.5};
+
+	/* # Metallic purple sphere */
+	Sphere purp_sp;
+	purp_sp.c = {-0.8, -0.75, -4};
+	purp_sp.r = 0.25;
+	purp_sp.colour = {0.5, 0, 0.5};
+
+	/* # Green cone */
+	Triangle gc1;
+	gc1.p0 = {0, -1, -5.8};
+	gc1.p1 = {0, 0.6, -5};
+	gc1.p2 = {0.4, -1, -5.693};
+	gc1.colour = {0, 0.7, 0};
+
+	Triangle gc2;
+	gc2.p0 = {0.4, -1, -5.693};
+	gc2.p1 = {0, 0.6, -5};
+	gc2.p2 = {0.6928, -1, -5.4};
+	gc2.colour = {0, 0.7, 0};
+
+	Triangle gc3;
+	gc3.p0 = {0.6928, -1, -5.4};
+	gc3.p1 = {0, 0.6, -5};
+	gc3.p2 = {0.8, -1, -5};
+	gc3.colour = {0, 0.7, 0};
+
+	Triangle gc4;
+	gc4.p0 = {0.8, -1, -5};
+	gc4.p1 = {0, 0.6, -5};
+	gc4.p2 = {0.6928, -1, -4.6};
+	gc4.colour = {0, 0.7, 0};
+
+	Triangle gc5;
+	gc5.p0 = {0.6928, -1, -4.6};
+	gc5.p1 = {0, 0.6, -5};
+	gc5.p2 = {0.4, -1, -4.307};
+	gc5.colour = {0, 0.7, 0};
+
+	Triangle gc6;
+	gc6.p0 = {0.4, -1, -4.307};
+	gc6.p1 = {0, 0.6, -5};
+	gc6.p2 = {0, -1, -4.2};
+	gc6.colour = {0, 0.7, 0};
+
+	Triangle gc7;
+	gc7.p0 = {0, -1, -4.2};
+	gc7.p1 = {0, 0.6, -5};
+	gc7.p2 = {-0.4, -1, -4.307};
+	gc7.colour = {0, 0.7, 0};
+
+	Triangle gc8;
+	gc8.p0 = {-0.4, -1, -4.307};
+	gc8.p1 = {0, 0.6, -5};
+	gc8.p2 = {-0.6928, -1, -4.6};
+	gc8.colour = {0, 0.7, 0};
+
+	Triangle gc9;
+	gc9.p0 = {-0.6928, -1, -4.6};
+	gc9.p1 = {0, 0.6, -5};
+	gc9.p2 = {-0.8, -1, -5};
+	gc9.colour = {0, 0.7, 0};
+
+	Triangle gc10;
+	gc10.p0 = {-0.8, -1, -5};
+	gc10.p1 = {0, 0.6, -5};
+	gc10.p2 = {-0.6928, -1, -5.4};
+	gc10.colour = {0, 0.7, 0};
+
+	Triangle gc11;
+	gc11.p0 = {-0.6928, -1, -5.4};
+	gc11.p1 = {0, 0.6, -5};
+	gc11.p2 = {-0.4, -1, -5.693};
+	gc11.colour = {0, 0.7, 0};
+
+	Triangle gc12;
+	gc12.p0 = {-0.4, -1, -5.693};
+	gc12.p1 = {0, 0.6, -5};
+	gc12.p2 = {0, -1, -5.8}; 
+	gc12.colour = {0, 0.7, 0};
+
+	/* Shiny red icosahedron */
+	Triangle ri1;	
+	ri1.p0 = {-2, -1, -7};
+	ri1.p1 = {-1.276, -0.4472, -6.474};
+	ri1.p2 = {-2.276, -0.4472, -6.149};
+	ri1.colour = {0.7, 0, 0};
+
+	Triangle ri2;
+	ri2.p0 = {-1.276, -0.4472, -6.474};
+	ri2.p1 = {-2, -1, -7};
+	ri2.p2 = {-1.276, -0.4472, -7.526};
+	ri2.colour = {0.7, 0, 0};
+
+	Triangle ri3;
+	ri3.p0 = {-2, -1, -7};
+	ri3.p1 = {-2.276, -0.4472, -6.149};
+	ri3.p2 = {-2.894, -0.4472, -7};
+	ri3.colour = {0.7, 0, 0};
+
+	Triangle ri4;
+	ri4.p0 = {-2, -1, -7};
+	ri4.p1 = {-2.894, -0.4472, -7};
+	ri4.p2 = {-2.276, -0.4472, -7.851};
+	ri4.colour = {0.7, 0, 0};
+
+	Triangle ri5;
+	ri5.p0 = {-2, -1, -7};
+	ri5.p1 = {-2.276, -0.4472, -7.851};
+	ri5.p2 = {-1.276, -0.4472, -7.526};
+	ri5.colour = {0.7, 0, 0};
+
+	Triangle ri6;
+	ri6.p0 = {-1.276, -0.4472, -6.474};
+	ri6.p1 = {-1.276, -0.4472, -7.526};
+	ri6.p2 = {-1.106, 0.4472, -7};
+	ri6.colour = {0.7, 0, 0};
+
+	Triangle ri7;
+	ri7.p0 = {-2.276, -0.4472, -6.149};
+	ri7.p1 = {-1.276, -0.4472, -6.474};
+	ri7.p2 = {-1.724, 0.4472, -6.149};
+	ri7.colour = {0.7, 0, 0};
+
+	Triangle ri8;
+	ri8.p0 = {-2.894, -0.4472, -7};
+	ri8.p1 = {-2.276, -0.4472, -6.149};
+	ri8.p2 = {-2.724, 0.4472, -6.474};
+	ri8.colour = {0.7, 0, 0};
+
+	Triangle ri9;
+	ri9.p0 = {-2.276, -0.4472, -7.851};
+	ri9.p1 = {-2.894, -0.4472, -7};
+	ri9.p2 = {-2.724, 0.4472, -7.526};
+	ri9.colour = {0.7, 0, 0};
+
+	Triangle ri10;
+	ri10.p0 = {-1.276, -0.4472, -7.526};
+	ri10.p1 = {-2.276, -0.4472, -7.851};
+	ri10.p2 = {-1.724, 0.4472, -7.851};
+	ri10.colour = {0.7, 0, 0};
+
+	Triangle ri11;
+	ri11.p0 = {-1.276, -0.4472, -6.474};
+	ri11.p1 = {-1.106, 0.4472, -7};
+	ri11.p2 = {-1.724, 0.4472, -6.149};
+	ri11.colour = {0.7, 0, 0};
+
+	Triangle ri12;
+	ri12.p0 = {-2.276, -0.4472, -6.149};
+	ri12.p1 = {-1.724, 0.4472, -6.149};
+	ri12.p2 = {-2.724, 0.4472, -6.474};
+	ri12.colour = {0.7, 0, 0};
+
+	Triangle ri13;
+	ri13.p0 = {-2.894, -0.4472, -7};
+	ri13.p1 = {-2.724, 0.4472, -6.474};
+	ri13.p2 = {-2.724, 0.4472, -7.526};
+	ri13.colour = {0.7, 0, 0};
+
+	Triangle ri14;
+	ri14.p0 = {-2.276, -0.4472, -7.851};
+	ri14.p1 = {-2.724, 0.4472, -7.526};
+	ri14.p2 = {-1.724, 0.4472, -7.851};
+	ri14.colour = {0.7, 0, 0};
+
+	Triangle ri15;
+	ri15.p0 = {-1.276, -0.4472, -7.526};
+	ri15.p1 = {-1.724, 0.4472, -7.851};
+	ri15.p2 = {-1.106, 0.4472, -7};
+	ri15.colour = {0.7, 0, 0};
+
+	Triangle ri16;
+	ri16.p0 = {-1.724, 0.4472, -6.149};
+	ri16.p1 = {-1.106, 0.4472, -7};
+	ri16.p2 = {-2, 1, -7};
+	ri16.colour = {0.7, 0, 0};
+
+	Triangle ri17;
+	ri17.p0 = {-2.724, 0.4472, -6.474};
+	ri17.p1 = {-1.724, 0.4472, -6.149};
+	ri17.p2 = {-2, 1, -7};
+	ri17.colour = {0.7, 0, 0};
+
+	Triangle ri18;
+	ri18.p0 = {-2.724, 0.4472, -7.526};
+	ri18.p1 = {-2.724, 0.4472, -6.474};
+	ri18.p2 = {-2, 1, -7};
+	ri18.colour = {0.7, 0, 0};
+
+	Triangle ri19;
+	ri19.p0 = {-1.724, 0.4472, -7.851};
+	ri19.p1 = {-2.724, 0.4472, -7.526};
+	ri19.p2 = {-2, 1, -7};
+	ri19.colour = {0.7, 0, 0};
+
+	Triangle ri20;
+	ri20.p0 = {-1.106, 0.4472, -7};
+	ri20.p1 = {-1.724, 0.4472, -7.851};
+	ri20.p2 = {-2, 1, -7};
+	ri20.colour = {0.7, 0, 0};
+
+	Triangle gc[12] = {gc1, gc2, gc3, gc4, gc5, gc6, gc7, gc8, gc9, gc10, gc11, gc12};
+	Triangle ri[20] = {ri1, ri2, ri3, ri4, ri5, ri6, ri7, ri8, ri9, ri10, ri11, ri12,
+		ri13, ri14, ri15, ri16, ri17, ri18, ri19, ri20};
+
+	for (int x = 0; x < img.Width(); x++) {
+		for (int y = 0; y < img.Height(); y++) {
+			float closest_mag = 200;
+			ray.x = -1*(img.Width()/2.f - 0.5f)+x;
+			ray.y = -1*(img.Height()/2.f - 0.5f)+y;
+			vec3 colour(0, 0, 0);
+			vec3 d(ray.x, ray.y, ray.z);
+
+			if (intersectPlane(pl, d, origin) != 0.f) {
+				if(pl.intmag < closest_mag) {
+					closest_mag = pl.intmag;
+					colour.x = 0.5;
+					colour.y = 0.5;
+					colour.z = 0.5;
+					/* shading(colour, pl.n, l, pl.intersect, d); */
+				}
+			}
+			if (intersectPlane(pl2, d, origin) != 0.f) {
+				if(pl.intmag < closest_mag) {
+					closest_mag = pl.intmag;
+					colour.x = 0.5;
+					colour.y = 0.2;
+					colour.z = 0.0;
+					/* shading(colour, pl2.n, l, pl2.intersect, d); */
+				}
+			}
+			for (uint i = 0; i < sizeof(gc)/sizeof(Triangle); i++) {
+				if (intersectTriangle(gc[i], d, origin)) {
+					if(gc[i].intmag < closest_mag) {
+						closest_mag = gc[i].intmag;
+						colour.x = 0;
+						colour.y = 0.7;
+						colour.z = 0;
+						/* scene_reflect1(1, d, bluepyramid[i].pl.n, bluepyramid[i].intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+						shading(colour, gc[i].pl.n, l, gc[i].intersect, d);
+					}
+				}
+			}
+			for (uint i = 0; i < sizeof(ri)/sizeof(Triangle); i++) {
+				if (intersectTriangle(ri[i], d, origin)) {
+					if(ri[i].intmag < closest_mag) {
+						closest_mag = ri[i].intmag;
+						colour.x = 0.7;
+						colour.y = 0;
+						colour.z = 0;
+						/* scene_reflect1(1, d, bluepyramid[i].pl.n, bluepyramid[i].intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+						shading(colour, ri[i].pl.n, l, ri[i].intersect, d);
+					}
+				}
+			}
+			if (intersectSphere(yellow_sp, d, origin)) {
+				if(yellow_sp.intmag < closest_mag) {
+					closest_mag = yellow_sp.intmag;
+					colour.x = 0;
+					colour.y = 0.5;
+					colour.z = 0.5;
+					/* scene_reflect1(2, d, cr.n, cr.intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+					shading(colour, yellow_sp.n, l, yellow_sp.intersect, d);
+				}
+			}
+			if (intersectSphere(grey_sp, d, origin)) {
+				if(grey_sp.intmag < closest_mag) {
+					closest_mag = grey_sp.intmag;
+					colour.x = 0.5;
+					colour.y = 0.5;
+					colour.z = 0.5;
+					/* scene_reflect1(2, d, cr.n, cr.intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+					shading(colour, grey_sp.n, l, grey_sp.intersect, d);
+				}
+			}
+			if (intersectSphere(purp_sp, d, origin)) {
+				if(purp_sp.intmag < closest_mag) {
+					closest_mag = purp_sp.intmag;
+					colour.x = 0.5;
+					colour.y = 0;
+					colour.z = 0.5;
+					/* scene_reflect1(2, d, cr.n, cr.intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+					shading(colour, purp_sp.n, l, purp_sp.intersect, d);
 				}
 			}
 			img.SetPixel(x, y, colour);
@@ -612,7 +1006,8 @@ int main(int argc, char *argv[])
 	MyGeometry geometry;
 	if (!InitializeGeometry(&geometry))
 		cout << "Program failed to intialize geometry!" << endl;
-	renderShapes();
+	/* renderShapes(); */
+	renderShapes2();
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
