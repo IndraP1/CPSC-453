@@ -268,7 +268,7 @@ bool intersectSphere(Sphere& cr, vec3& d, vec3& o) {
 	}
 	float t = (-B + sqrt(quad))/(2*A);
 
-		cr.intersect = o + t*d;
+	cr.intersect = o + t*d;
 	cr.n = cr.intersect - cr.c;
 	cr.intmag = length(cr.intersect);
 	
@@ -348,7 +348,7 @@ void printVec3(const char* prefix, const vec3& v)
 void shading(vec3& colour, vec3& n, Light& lightpoint, vec3& intersect, vec3& d) {
 	float p = 256;
 	float cl = 1;
-	float ca = 0.25;
+	float ca = 0.2;
 	vec3 l(lightpoint.p - intersect);
 	vec3 origin(0, 0, 0);
 	lightpoint.intensity = ca + cl*dot(normalize(n), (normalize(l)));
@@ -386,6 +386,43 @@ void checkShadow1(vec3& intercept, vec3& colours, Light& lightpoint, Triangle bl
 	}	
 
 	if (intersectSphere(sphere, l, intercept)) {
+		colours.x = 0.1;
+		colours.y = 0.1;
+		colours.z = 0.1;
+	}
+}
+
+void checkShadow2(vec3& intercept, vec3& colours, Light& lightpoint, Triangle greencone[], Triangle rediso[], Sphere& yellow_sp, Sphere& grey_sp,
+		Sphere& purp_sp) {
+	vec3 l(lightpoint.p - intercept);
+
+	for (uint i = 0; i <= 12; i++) {
+		if (intersectTriangle(greencone[i], l, intercept)) {
+			colours.x = 0.1;
+			colours.y = 0.1;
+			colours.z = 0.1;
+		}
+	}	
+
+	for (uint i = 0; i <= 20; i++) {
+		if (intersectTriangle(rediso[i], l, intercept)) {
+			colours.x = 0.1;
+			colours.y = 0.1;
+			colours.z = 0.1;
+		}
+	}	
+
+	if (intersectSphere(grey_sp, l, intercept)) {
+		colours.x = 0.1;
+		colours.y = 0.1;
+		colours.z = 0.1;
+	}
+	if (intersectSphere(yellow_sp, l, intercept)) {
+		colours.x = 0.1;
+		colours.y = 0.1;
+		colours.z = 0.1;
+	}
+	if (intersectSphere(purp_sp, l, intercept)) {
 		colours.x = 0.1;
 		colours.y = 0.1;
 		colours.z = 0.1;
@@ -433,6 +470,54 @@ void scene_reflect1(int obj, vec3& d, vec3& n, vec3& intersect, vec3& colour, Sp
 			colour.y = cr.colour.y;
 			colour.z = cr.colour.z;
 		}
+	}
+}
+
+void scene_reflect2(int obj, vec3& d, vec3& n, vec3& intersect, vec3& colour, Sphere& yellow_sp, Sphere& purple_sp, Sphere& grey_sp, Triangle greencone[], Triangle rediso[]) {
+	vec3 r(reflect(d, n));	
+
+	for (uint i = 0; i <= 12; i++) {
+		if (intersectTriangle(greencone[i], r, intersect)) {
+			colour.x = greencone[i].colour.x;
+			colour.y = greencone[i].colour.y;
+			colour.z = greencone[i].colour.z;
+		}
+	}	
+
+	if (intersectSphere(yellow_sp, r, intersect)) {
+		colour.x = yellow_sp.colour.x;
+		colour.y = yellow_sp.colour.y;
+		colour.z = yellow_sp.colour.z;
+	}
+
+	if (intersectSphere(yellow_sp, r, intersect)) {
+		colour.x = yellow_sp.colour.x;
+		colour.y = yellow_sp.colour.y;
+		colour.z = yellow_sp.colour.z;
+	}
+
+	if (obj != 1) {
+		if (intersectSphere(purple_sp, r, intersect)) {
+			colour.x = purple_sp.colour.x;
+			colour.y = purple_sp.colour.y;
+			colour.z = purple_sp.colour.z;
+		}
+	}
+	if (obj != 2) {
+		if (intersectSphere(grey_sp, r, intersect)) {
+			colour.x = grey_sp.colour.x;
+			colour.y = grey_sp.colour.y;
+			colour.z = grey_sp.colour.z;
+		}
+	}
+	if(obj != 3) {
+		for (uint i = 0; i <= 20; i++) {
+			if (intersectTriangle(rediso[i], r, intersect)) {
+				colour.x = rediso[i].colour.x;
+				colour.y = rediso[i].colour.y;
+				colour.z = rediso[i].colour.z;
+			}
+		}	
 	}
 }
 
@@ -537,7 +622,7 @@ void renderShapes() {
 	f2.colour = {0.3, 0.3, 0.3};
 
 	Triangle floor[2] = {f1, f2};
-	ray.z = -950;
+	ray.z = -500;
 
 	for (int x = 0; x < img.Width(); x++) {
 		for (int y = 0; y < img.Height(); y++) {
@@ -633,27 +718,27 @@ void renderShapes() {
 
 void renderShapes2() {
 	coord3D ray;
-	ray.z = -950;
+	ray.z = -500;
 	vec3 origin(0, 0, 0);
 
 	Light l;
 	l.p = {4, 6, 1};
 
 	Plane pl;
-	pl.p = {0, 1, 0};
-	pl.n = {0, -1, 0};
-	pl.colour = {0.5, 0.3, 0};
+	pl.p = {0, -1, 0};
+	pl.n = {0, 1, 0};
+	pl.colour = {0.5, 0.5, 0.5};
 
 	Plane pl2;
-	pl2.p = {0, 0, 1};
-	pl2.n = {0, 0, -12};
-	pl2.colour = {0.5, 0.5, 0.5};
+	pl2.p = {0, 0, -12};
+	pl2.n = {0, 0, 1};
+	pl2.colour = {0.5, 0.3, 0};
 
 	/* # Large yellow sphere */
 	Sphere yellow_sp;
 	yellow_sp.c = {1, -0.5, -3.5};
 	yellow_sp.r = 0.5;
-	yellow_sp.colour = {0, 0.5, 0.5};
+	yellow_sp.colour = {0.5, 0.5, 0};
 
 	/* # Reflective grey sphere */
 	Sphere grey_sp;
@@ -690,7 +775,7 @@ void renderShapes2() {
 	gc4.p0 = {0.8, -1, -5};
 	gc4.p1 = {0, 0.6, -5};
 	gc4.p2 = {0.6928, -1, -4.6};
-	gc4.colour = {0, 0.7, 0};
+	gc3.colour = {0, 0.7, 0};
 
 	Triangle gc5;
 	gc5.p0 = {0.6928, -1, -4.6};
@@ -872,23 +957,26 @@ void renderShapes2() {
 			ray.y = -1*(img.Height()/2.f - 0.5f)+y;
 			vec3 colour(0, 0, 0);
 			vec3 d(ray.x, ray.y, ray.z);
-
+			
+			// Floor
 			if (intersectPlane(pl, d, origin) != 0.f) {
-				if(pl.intmag < closest_mag) {
+				if(pl.intmag < closest_mag && y < img.Height()/2) {
 					closest_mag = pl.intmag;
 					colour.x = 0.5;
 					colour.y = 0.5;
 					colour.z = 0.5;
-					/* shading(colour, pl.n, l, pl.intersect, d); */
+					shading(colour, pl.n, l, pl.intersect, d);
+					checkShadow2(pl.intersect, colour, l, gc, ri, yellow_sp, grey_sp, purp_sp);
 				}
 			}
+			// Wall
 			if (intersectPlane(pl2, d, origin) != 0.f) {
-				if(pl.intmag < closest_mag) {
-					closest_mag = pl.intmag;
-					colour.x = 0.5;
-					colour.y = 0.2;
-					colour.z = 0.0;
-					/* shading(colour, pl2.n, l, pl2.intersect, d); */
+				if(pl2.intmag < closest_mag) {
+					closest_mag = pl2.intmag;
+					colour.x = 0;
+					colour.y = 0.5;
+					colour.z = 0.5;
+					shading(colour, pl2.n, l, pl2.intersect, d);
 				}
 			}
 			for (uint i = 0; i < sizeof(gc)/sizeof(Triangle); i++) {
@@ -898,7 +986,6 @@ void renderShapes2() {
 						colour.x = 0;
 						colour.y = 0.7;
 						colour.z = 0;
-						/* scene_reflect1(1, d, bluepyramid[i].pl.n, bluepyramid[i].intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
 						shading(colour, gc[i].pl.n, l, gc[i].intersect, d);
 					}
 				}
@@ -910,7 +997,7 @@ void renderShapes2() {
 						colour.x = 0.7;
 						colour.y = 0;
 						colour.z = 0;
-						/* scene_reflect1(1, d, bluepyramid[i].pl.n, bluepyramid[i].intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+						scene_reflect2(3, d, ri[i].pl.n, ri[i].intersect, colour, yellow_sp, purp_sp, grey_sp, gc, ri);
 						shading(colour, ri[i].pl.n, l, ri[i].intersect, d);
 					}
 				}
@@ -918,10 +1005,9 @@ void renderShapes2() {
 			if (intersectSphere(yellow_sp, d, origin)) {
 				if(yellow_sp.intmag < closest_mag) {
 					closest_mag = yellow_sp.intmag;
-					colour.x = 0;
+					colour.x = 0.5;
 					colour.y = 0.5;
-					colour.z = 0.5;
-					/* scene_reflect1(2, d, cr.n, cr.intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+					colour.z = 0;
 					shading(colour, yellow_sp.n, l, yellow_sp.intersect, d);
 				}
 			}
@@ -931,7 +1017,7 @@ void renderShapes2() {
 					colour.x = 0.5;
 					colour.y = 0.5;
 					colour.z = 0.5;
-					/* scene_reflect1(2, d, cr.n, cr.intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+					scene_reflect2(2, d, grey_sp.n, grey_sp.intersect, colour, yellow_sp, purp_sp, grey_sp, gc, ri);
 					shading(colour, grey_sp.n, l, grey_sp.intersect, d);
 				}
 			}
@@ -941,7 +1027,7 @@ void renderShapes2() {
 					colour.x = 0.5;
 					colour.y = 0;
 					colour.z = 0.5;
-					/* scene_reflect1(2, d, cr.n, cr.intersect, colour, cr, pl, bluepyramid, ceiling, redwall, greenwall, floor); */
+					scene_reflect2(1, d, purp_sp.n, purp_sp.intersect, colour, yellow_sp, purp_sp, grey_sp, gc, ri);
 					shading(colour, purp_sp.n, l, purp_sp.intersect, d);
 				}
 			}
@@ -949,7 +1035,133 @@ void renderShapes2() {
 		}
 	}
 }
+void renderShapes3() {
+	coord3D ray;
+	ray.z = -500;
+	vec3 origin(0, 0, 0);
 
+	// Plane 
+	Plane pl;
+	pl.p = {0, 0, -10.5};
+	pl.n = {0, 0, 1};
+	pl.colour = {0.5, 0.5, 0.5};
+	// Light 
+	Light l;
+	l.p = {1, 1, -12};
+
+	Sphere head;
+	head.c = {0.8, -0.8, -3.5};
+	head.r = 1;
+	head.colour = {0, 0, 0.5};
+
+	Sphere eye1;
+	eye1.c = {0.9, 0.1, -3.1};
+	eye1.r = 0.2;
+	eye1.colour = {0.3, 0.3, 0.3};
+	
+	Sphere pupil1;
+	pupil1.c = {0.9, 0.1, -2.8};
+	pupil1.r = 0.1;
+	pupil1.colour = {0, 0, 0};
+	
+	Sphere pupil2;
+	pupil2.c = {0.5, 0, -2.9};
+	pupil2.r = 0.1;
+	pupil2.colour = {0, 0, 0};
+	
+	Sphere eye2;
+	eye2.c = {0.5, 0.1, -3.1};
+	eye2.r = 0.2;
+	eye2.colour = {0.3, 0.3, 0.3};
+
+	Triangle mouth;
+	mouth.p0 = {-0.2, -0.8, -3.1};
+	mouth.p1 = {1.8, -0.8, -3.1};
+	mouth.p2 = {0.8, -1.4, -3.1};
+	mouth.colour = {0, 0, 0};
+
+
+	/* Sphere head; */
+	/* head.c = {0.8, -0.8, -3.5}; */
+	/* head.r = 1; */
+	/* head.colour = {0, 0, 0.5}; */
+	
+	for (int x = 0; x < img.Width(); x++) {
+		for (int y = 0; y < img.Height(); y++) {
+			float closest_mag = 200;
+			ray.x = -1*(img.Width()/2.f - 0.5f)+x;
+			ray.y = -1*(img.Height()/2.f - 0.5f)+y;
+			vec3 colour(0, 0, 0);
+			vec3 d(ray.x, ray.y, ray.z);
+
+			if (intersectPlane(pl, d, origin) != 0.f) {
+				if(pl.intmag < closest_mag) {
+					closest_mag = pl.intmag;
+					colour.x = 0.5;
+					colour.y = 0;
+					colour.z = 0.5;
+					/* shading(colour, pl.n, l, pl.intersect, d); */
+				}
+			}
+			if (intersectSphere(head, d, origin)) {
+				if(head.intmag < closest_mag) {
+					closest_mag = head.intmag;
+					colour.x = 0;
+					colour.y = 0;
+					colour.z = 0.5;
+					shading(colour, head.n, l, head.intersect, d);
+				}
+			}
+			if (intersectSphere(eye1, d, origin)) {
+				if(eye1.intmag < closest_mag) {
+					closest_mag = eye1.intmag;
+					colour.x = 0.5;
+					colour.y = 0.5;
+					colour.z = 0.5;
+					shading(colour, eye1.n, l, eye1.intersect, d);
+				}
+			}
+			if (intersectSphere(pupil1, d, origin)) {
+				if(pupil1.intmag < closest_mag) {
+					closest_mag = pupil1.intmag;
+					colour.x = 0;
+					colour.y = 0;
+					colour.z = 0;
+					shading(colour, pupil1.n, l, pupil1.intersect, d);
+				}
+			}
+			if (intersectSphere(pupil2, d, origin)) {
+				if(pupil2.intmag < closest_mag) {
+					closest_mag = pupil2.intmag;
+					colour.x = 0;
+					colour.y = 0;
+					colour.z = 0;
+					shading(colour, pupil2.n, l, pupil2.intersect, d);
+				}
+			}
+			if (intersectSphere(eye2, d, origin)) {
+				if(eye2.intmag < closest_mag) {
+					closest_mag = eye2.intmag;
+					colour.x = 0.5;
+					colour.y = 0.5;
+					colour.z = 0.5;
+					shading(colour, eye2.n, l, eye2.intersect, d);
+				}
+			}
+
+			if (intersectTriangle(mouth, d, origin)) {
+				if(mouth.intmag < closest_mag) {
+					closest_mag = mouth.intmag;
+					colour.x = 0;
+					colour.y = 0;
+					colour.z = 0;
+					shading(colour, mouth.pl.n, l, mouth.intersect, d);
+				}
+			}
+			img.SetPixel(x, y, colour);
+		}
+	}
+}
 // ==========================================================================
 // PROGRAM ENTRY POINT
 
@@ -968,7 +1180,7 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	window = glfwCreateWindow(1024, 1024, "CPSC 453 OpenGL Boilerplate", 0, 0);
+	window = glfwCreateWindow(512, 512, "CPSC 453 OpenGL Boilerplate", 0, 0);
 	if (!window) {
 		cout << "Program failed to create GLFW window, TERMINATING" << endl;
 		glfwTerminate();
@@ -1007,7 +1219,8 @@ int main(int argc, char *argv[])
 	if (!InitializeGeometry(&geometry))
 		cout << "Program failed to intialize geometry!" << endl;
 	/* renderShapes(); */
-	renderShapes2();
+	/* renderShapes2(); */
+	renderShapes3();
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
