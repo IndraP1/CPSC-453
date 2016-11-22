@@ -1054,19 +1054,24 @@ void renderShapes3() {
 	head.r = 1;
 	head.colour = {0, 0, 0.5};
 
+	Sphere body;
+	body.c = {1.1, -3.5, -3.5};
+	body.r = 2;
+	body.colour = {0, 0, 0.5};
+
 	Sphere eye1;
 	eye1.c = {0.9, 0.1, -3.1};
 	eye1.r = 0.2;
 	eye1.colour = {0.3, 0.3, 0.3};
 	
 	Sphere pupil1;
-	pupil1.c = {0.9, 0.1, -2.8};
-	pupil1.r = 0.1;
+	pupil1.c = {0.78, 0.15, -2.8};
+	pupil1.r = 0.08;
 	pupil1.colour = {0, 0, 0};
 	
 	Sphere pupil2;
-	pupil2.c = {0.5, 0, -2.9};
-	pupil2.r = 0.1;
+	pupil2.c = {0.5, 0.05, -2.9};
+	pupil2.r = 0.08;
 	pupil2.colour = {0, 0, 0};
 	
 	Sphere eye2;
@@ -1077,15 +1082,15 @@ void renderShapes3() {
 	Triangle mouth;
 	mouth.p0 = {-0.2, -0.8, -3.1};
 	mouth.p1 = {1.8, -0.8, -3.1};
-	mouth.p2 = {0.8, -1.4, -3.1};
+	mouth.p2 = {0.7, -1.4, -3.1};
 	mouth.colour = {0, 0, 0};
 
+	Triangle mouth2;
+	mouth2.p0 = {-0.2, -0.8, -3.1};
+	mouth2.p1 = {1.8, -0.8, -3.1};
+	mouth2.p2 = {0.7, -0.4, -3.1};
+	mouth.colour = {0, 0, 0};
 
-	/* Sphere head; */
-	/* head.c = {0.8, -0.8, -3.5}; */
-	/* head.r = 1; */
-	/* head.colour = {0, 0, 0.5}; */
-	
 	for (int x = 0; x < img.Width(); x++) {
 		for (int y = 0; y < img.Height(); y++) {
 			float closest_mag = 200;
@@ -1100,7 +1105,6 @@ void renderShapes3() {
 					colour.x = 0.5;
 					colour.y = 0;
 					colour.z = 0.5;
-					/* shading(colour, pl.n, l, pl.intersect, d); */
 				}
 			}
 			if (intersectSphere(head, d, origin)) {
@@ -1110,6 +1114,15 @@ void renderShapes3() {
 					colour.y = 0;
 					colour.z = 0.5;
 					shading(colour, head.n, l, head.intersect, d);
+				}
+			}
+			if (intersectSphere(body, d, origin)) {
+				if(body.intmag < closest_mag) {
+					closest_mag = body.intmag;
+					colour.x = 0;
+					colour.y = 0;
+					colour.z = 0.5;
+					shading(colour, body.n, l, body.intersect, d);
 				}
 			}
 			if (intersectSphere(eye1, d, origin)) {
@@ -1156,6 +1169,15 @@ void renderShapes3() {
 					colour.y = 0;
 					colour.z = 0;
 					shading(colour, mouth.pl.n, l, mouth.intersect, d);
+				}
+			}
+			if (intersectTriangle(mouth2, d, origin)) {
+				if(mouth2.intmag < closest_mag) {
+					closest_mag = mouth2.intmag;
+					colour.x = 0;
+					colour.y = 0;
+					colour.z = 0;
+					shading(colour, mouth2.pl.n, l, mouth2.intersect, d);
 				}
 			}
 			img.SetPixel(x, y, colour);
@@ -1215,12 +1237,31 @@ int main(int argc, char *argv[])
 	}
 
 	// call function to create and fill buffers with geometry data
+	if ( argc != 2 ) {
+		cout<<"Run `./boilerplate 1` for scene 1\n";
+		cout<<"Run `./boilerplate 2` for scene 2\n";
+		cout<<"Run `./boilerplate 3` for scene 3\n";
+		return 0;
+	}
+
+	int scene = atoi(argv[1]);
+	cout << scene;
 	MyGeometry geometry;
 	if (!InitializeGeometry(&geometry))
 		cout << "Program failed to intialize geometry!" << endl;
-	/* renderShapes(); */
-	/* renderShapes2(); */
-	renderShapes3();
+	if (scene == 1)
+		renderShapes();
+	else if (scene == 2) {
+		renderShapes2();
+	}
+	else if (scene == 3)
+		renderShapes3();
+	else {
+		cout<<"Run `./boilerplate 1` for scene 1\n";
+		cout<<"Run `./boilerplate 2` for scene 2\n";
+		cout<<"Run `./boilerplate 3` for scene 3\n";
+		return 0;
+	}
 	// run an event-triggered main loop
 	while (!glfwWindowShouldClose(window))
 	{
