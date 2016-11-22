@@ -1,0 +1,31 @@
+= CPSC 453 Assignment 4 README
+
+== Student Info and Assignement Details
+
+Name: Mahindra Prasetyo
+
+The following code was not my own:
+
+- boilerplate.cpp was provided but heavily modified.
+- ImageBuffer.cpp, fragment.glsl, fragment.glsl, and ImageBuffer.h were provided. makefile and all code in middleware directory were also provided.
+
+== Instructions
+
+In terminal, run the following commands:
+
+. `make`
+. `./boilerplate 1` to render scene 1
+. `./boilerplate 2` to render scene 2
+. `./boilerplate 3` to render scene 3, a poorly drawn cookie monster.
+. Use key `Esc` to close the window.
+
+== Platform and Compiler Info
+
+- Fedora Release 24
+- gcc version 6.2.1 20160916 (Red Hat 6.2.1-2) (GCC) 
+- OpenGL version string: 4.5.0 NVIDIA 367.18
+
+
+
+
+

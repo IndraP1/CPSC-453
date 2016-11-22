@@ -1251,9 +1251,8 @@ int main(int argc, char *argv[])
 		cout << "Program failed to intialize geometry!" << endl;
 	if (scene == 1)
 		renderShapes();
-	else if (scene == 2) {
+	else if (scene == 2)
 		renderShapes2();
-	}
 	else if (scene == 3)
 		renderShapes3();
 	else {
