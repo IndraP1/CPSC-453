@@ -20,6 +20,6 @@ uniform sampler2D tex;
 void main(void)
 {
     // write colour output without modification
-    FragmentColour = vec4(Colour, 1);
-    //FragmentColour = texture(tex, Normal.xy + vec2(0.5, 0.5));
+	/* FragmentColour = texture(tex, Normal.xy + vec2(0.5, 0.5)); */
+	FragmentColour = texture(tex, TextureCoord.xy);
 }

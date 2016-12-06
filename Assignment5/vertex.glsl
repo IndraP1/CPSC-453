@@ -34,10 +34,9 @@ void main()
     gl_Position = proj*view*model*vec4(VertexPosition, 1.0);
 
     // assign output colour to be interpolated
-    Colour = VertexColour;
+	TextureCoord = VertexTextureCoord;
     // ---
-    TextureCoord = VertexTextureCoord;
-    Normal = (model*vec4(VertexNormal, 0)).xyz;
+	Normal = (vec4(VertexNormal, 0)).xyz;
     FragPos = (model*vec4(VertexPosition, 1)).xyz;
     // ---
 }

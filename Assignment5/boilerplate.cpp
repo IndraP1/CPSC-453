@@ -193,135 +193,97 @@ struct MyGeometry
     {}
 };
 
-vector<GLfloat> get_sphere_vertices(float radius, float segmentation_level)
+void get_sphere_vertices(vector<GLfloat>& vertices, vector<GLfloat>& normals, float radius, float level)
 {
-    float degree_step = 2*M_PI/segmentation_level;
-    float rho = radius;
-    float theta, phi;
-    float next_theta, next_phi;
+    float degree_step = 2*M_PI/level;
+    float theta, phi, next_theta, next_phi;
 
-    vector<GLfloat> vertices;
-
-    for (int i = 0; i < segmentation_level/2; ++i)
+    for (int i = 0; i < level/2; ++i)
     {
         phi = i*degree_step;
         next_phi = phi + degree_step;
 
-        for (int j = 0; j < segmentation_level; ++j)
+        for (int j = 0; j < level; ++j)
         {
             theta = j*degree_step;
             next_theta = theta + degree_step;
 
             // first triangle
             // top left, bottom left, bottom right
-            float triangle1_x1 = rho*cos(theta)*sin(phi);
-            float triangle1_y1 = rho*sin(theta)*sin(phi);
-            float triangle1_z1 = rho*cos(phi);
-            float triangle1_x2 = rho*cos(theta)*sin(next_phi);
-            float triangle1_y2 = rho*sin(theta)*sin(next_phi);
-            float triangle1_z2 = rho*cos(next_phi);
-            float triangle1_x3 = rho*cos(next_theta)*sin(next_phi);
-            float triangle1_y3 = rho*sin(next_theta)*sin(next_phi);
-            float triangle1_z3 = rho*cos(next_phi);
+            float triangle1_x1 = cos(theta)*sin(phi);
+            float triangle1_y1 = sin(theta)*sin(phi);
+            float triangle1_z1 = cos(phi);
+            float triangle1_x2 = cos(theta)*sin(next_phi);
+            float triangle1_y2 = sin(theta)*sin(next_phi);
+            float triangle1_z2 = cos(next_phi);
+            float triangle1_x3 = cos(next_theta)*sin(next_phi);
+            float triangle1_y3 = sin(next_theta)*sin(next_phi);
+            float triangle1_z3 = cos(next_phi);
 
-            vertices.push_back(triangle1_x1);
-            vertices.push_back(triangle1_y1);
-            vertices.push_back(triangle1_z1);
-            vertices.push_back(triangle1_x2);
-            vertices.push_back(triangle1_y2);
-            vertices.push_back(triangle1_z2);
-            vertices.push_back(triangle1_x3);
-            vertices.push_back(triangle1_y3);
-            vertices.push_back(triangle1_z3);
+            vertices.push_back(radius*triangle1_x1);
+            vertices.push_back(radius*triangle1_y1);
+            vertices.push_back(radius*triangle1_z1);
+            vertices.push_back(radius*triangle1_x2);
+            vertices.push_back(radius*triangle1_y2);
+            vertices.push_back(radius*triangle1_z2);
+            vertices.push_back(radius*triangle1_x3);
+            vertices.push_back(radius*triangle1_y3);
+            vertices.push_back(radius*triangle1_z3);
+
+            normals.push_back(triangle1_x1);
+            normals.push_back(triangle1_y1);
+            normals.push_back(triangle1_z1);
+            normals.push_back(triangle1_x2);
+            normals.push_back(triangle1_y2);
+            normals.push_back(triangle1_z2);
+            normals.push_back(triangle1_x3);
+            normals.push_back(triangle1_y3);
+            normals.push_back(triangle1_z3);
 
             // second triangle
             // top left, bottom right, top right
-            float triangle2_x1 = rho*cos(theta)*sin(phi);
-            float triangle2_y1 = rho*sin(theta)*sin(phi);
-            float triangle2_z1 = rho*cos(phi);
-            float triangle2_x2 = rho*cos(next_theta)*sin(next_phi);
-            float triangle2_y2 = rho*sin(next_theta)*sin(next_phi);
-            float triangle2_z2 = rho*cos(next_phi);
-            float triangle2_x3 = rho*cos(next_theta)*sin(phi);
-            float triangle2_y3 = rho*sin(next_theta)*sin(phi);
-            float triangle2_z3 = rho*cos(phi);
+            float triangle2_x1 = cos(theta)*sin(phi);
+            float triangle2_y1 = sin(theta)*sin(phi);
+            float triangle2_z1 = cos(phi);
+            float triangle2_x2 = cos(next_theta)*sin(next_phi);
+            float triangle2_y2 = sin(next_theta)*sin(next_phi);
+            float triangle2_z2 = cos(next_phi);
+            float triangle2_x3 = cos(next_theta)*sin(phi);
+            float triangle2_y3 = sin(next_theta)*sin(phi);
+            float triangle2_z3 = cos(phi);
 
-            vertices.push_back(triangle2_x1);
-            vertices.push_back(triangle2_y1);
-            vertices.push_back(triangle2_z1);
-            vertices.push_back(triangle2_x2);
-            vertices.push_back(triangle2_y2);
-            vertices.push_back(triangle2_z2);
-            vertices.push_back(triangle2_x3);
-            vertices.push_back(triangle2_y3);
-            vertices.push_back(triangle2_z3);
+            vertices.push_back(radius*triangle2_x1);
+            vertices.push_back(radius*triangle2_y1);
+            vertices.push_back(radius*triangle2_z1);
+            vertices.push_back(radius*triangle2_x2);
+            vertices.push_back(radius*triangle2_y2);
+            vertices.push_back(radius*triangle2_z2);
+            vertices.push_back(radius*triangle2_x3);
+            vertices.push_back(radius*triangle2_y3);
+            vertices.push_back(radius*triangle2_z3);
+
+            normals.push_back(triangle2_x1);
+            normals.push_back(triangle2_y1);
+            normals.push_back(triangle2_z1);
+            normals.push_back(triangle2_x2);
+            normals.push_back(triangle2_y2);
+            normals.push_back(triangle2_z2);
+            normals.push_back(triangle2_x3);
+            normals.push_back(triangle2_y3);
+            normals.push_back(triangle2_z3);
         }
     }
-
-    return vertices;
 }
 
 // create buffers and fill with geometry data, returning true if successful
 bool InitializeGeometry(MyGeometry *geometry)
 {
-    // three vertex positions and assocated colours of a triangle
-    /*
-    const GLfloat vertices[][3] = {
-        { -1, -1, 1 },
-        { -1, 1, 1 },
-        {  1, 1, 1 },
-        {  1, -1, 1 },
-
-        { -1, -1, -1 },
-        { -1, 1,  -1 },
-        {  1, 1,  -1 },
-        {  1, -1, -1 }
-    };
-    */
-
-    vector<GLfloat> vertices = get_sphere_vertices(1.5, 36);
+    vector<GLfloat> vertices;
+    vector<GLfloat> normals;
+	get_sphere_vertices(vertices, normals, 1.5, 36);
 
     // make it a white sphere
     GLfloat colours[vertices.size()];
-    fill_n(colours, vertices.size(), 1);
-    // colour the top of the sphere specially
-    //colours[0] = 0;
-
-    /*
-    const unsigned indices[36] = { //elements
-        0, 2, 1, //Front
-        0, 3, 2,
-
-        1, 6, 5, //Top
-        1, 2, 6,
-
-        3, 6, 2, //Right
-        3, 7, 6,
-
-        1, 4, 0, //Left
-        1, 5, 4,
-
-        0, 4, 7, //Bottom
-        0, 7, 3,
-
-        4, 6, 7, //Back
-        4, 5, 6
-    };
-    */
-
-    // ---
-    const GLfloat normals[][3] = {
-        // front facing normals
-        {-0.577, -0.577, 0.577},
-        {-0.577,  0.577, 0.577},
-        { 0.577,  0.577, 0.577},
-        { 0.577, -0.577, 0.577},
-        // back facing normals
-        {-0.577, -0.577, -0.577},
-        {-0.577,  0.577, -0.577},
-        { 0.577,  0.577, -0.577},
-        { 0.577, -0.577, -0.577},
-    };
 
     const GLfloat textureCoords[16] = {
         0.0f, 0.0f,
@@ -335,10 +297,6 @@ bool InitializeGeometry(MyGeometry *geometry)
         0.666f, 0.0f,
     };
     // ---
-
-    /*
-    geometry->elementCount = 36;
-    */
     geometry->elementCount = vertices.size();
 
     // these vertex attribute indices correspond to those specified for the
@@ -369,7 +327,7 @@ bool InitializeGeometry(MyGeometry *geometry)
     // create another one for storing our normals
     glGenBuffers(1, &geometry->normalBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->normalBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat), &normals[0], GL_STATIC_DRAW);
     // ---
 
     // create a vertex array object encapsulating all our vertex attributes
@@ -556,13 +514,12 @@ int main(int argc, char *argv[])
     if (!InitializeGeometry(&geometry))
         cout << "Program failed to intialize geometry!" << endl;
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    /* glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
     
     float angle = 0.f, size = 1.f;
     vec3 location(0,0,0);
     vec3 axis(0,1,0);
 
-    float camera_radius = 4;
     float camera_phi = 0;
     float camera_theta = 0;
 
@@ -579,9 +536,11 @@ int main(int argc, char *argv[])
     while (!glfwWindowShouldClose(window))
     {
         glUseProgram(shader.program);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         mat4 model = translate(I, location) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0)) * scale(I, vec3(size, 1, 1));
 
-		camera_phi = mouse_status.location_offset.x;
+		camera_phi = -mouse_status.location_offset.x;
 		camera_theta = mouse_status.location_offset.y;
 
 		vec3 cameraLoc( sin(camera_phi)*sin(camera_theta), cos(camera_theta), cos(camera_phi)*sin(camera_theta));
