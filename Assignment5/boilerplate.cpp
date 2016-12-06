@@ -75,8 +75,15 @@ struct MouseStatus
 	Coordinate mouse_press;
 	float zoom = 4;
 };
-
 MouseStatus mouse_status;
+
+struct KeyboardStatus 
+{
+	float x = 0;
+	float y = 0;
+};
+KeyboardStatus keyboard_status;
+
 
 
 // load, compile, and link shaders, returning true if successful
@@ -482,6 +489,14 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
+		keyboard_status.x += 0.1;
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
+		keyboard_status.x -= 0.1;
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+		keyboard_status.y += 0.1;
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+		keyboard_status.y -= 0.1;
 }
 
 // ==========================================================================
@@ -566,16 +581,15 @@ int main(int argc, char *argv[])
         glUseProgram(shader.program);
         mat4 model = translate(I, location) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0)) * scale(I, vec3(size, 1, 1));
 
-		camera_phi = -mouse_status.location_offset.x;
-		camera_theta = -mouse_status.location_offset.y;
+		camera_phi = mouse_status.location_offset.x;
+		camera_theta = mouse_status.location_offset.y;
 
 		vec3 cameraLoc( sin(camera_phi)*sin(camera_theta), cos(camera_theta), cos(camera_phi)*sin(camera_theta));
-		camera_radius = mouse_status.zoom;
-        vec3 modified_camera_loc = camera_radius * cameraLoc;
+        vec3 modified_camera_loc = mouse_status.zoom * cameraLoc;
 		vec3 cameraDir = -modified_camera_loc;
-		vec3 cameraUp = normalize(vec3( -cos(camera_phi), 1, -sin(camera_phi)));
+		vec3 cameraUp = cross(vec3( cos(camera_phi), 0, -sin(camera_phi)), cameraDir);
 
-        mat4 view = lookAt(modified_camera_loc, modified_camera_loc+cameraDir, cameraUp);
+        mat4 view = lookAt(modified_camera_loc, -modified_camera_loc, cameraUp);
         mat4 proj = perspective(fov, aspectRatio, zNear, zFar);
         glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
         glUniformMatrix4fv(viewUniform, 1, false, value_ptr(view));
