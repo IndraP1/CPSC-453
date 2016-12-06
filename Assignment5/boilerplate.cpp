@@ -61,6 +61,24 @@ struct MyShader
     {}
 };
 
+struct Coordinate
+{
+	double x;
+	double y;
+};
+
+struct MouseStatus 
+{
+	bool button_pressed;
+	Coordinate location_offset;
+	Coordinate prev_location_offset;
+	Coordinate mouse_press;
+	float zoom = 4;
+};
+
+MouseStatus mouse_status;
+
+
 // load, compile, and link shaders, returning true if successful
 bool InitializeShaders(MyShader *shader)
 {
@@ -423,6 +441,32 @@ void RenderScene(MyGeometry *geometry, MyShader *shader, MyTexture *texture)
     CheckGLErrors();
 }
 
+static void mouse_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		mouse_status.button_pressed = true;
+		glfwGetCursorPos(window, &mouse_status.mouse_press.x, &mouse_status.mouse_press.y);
+		mouse_status.prev_location_offset = mouse_status.location_offset;
+	} else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		mouse_status.button_pressed = false;
+	}
+	cout << "location_x:" << mouse_status.location_offset.x << endl;
+	cout << "location_y:" << mouse_status.location_offset.y << endl;
+}
+
+static void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
+	if(mouse_status.button_pressed) {
+		mouse_status.location_offset.x = mouse_status.prev_location_offset.x - ((mouse_status.mouse_press.x - xpos))/100;
+		mouse_status.location_offset.y = mouse_status.prev_location_offset.y + ((mouse_status.mouse_press.y - ypos))/100;
+	} 
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	mouse_status.zoom -= yoffset;
+}
+
+
+
 // --------------------------------------------------------------------------
 // GLFW callback functions
 
@@ -468,6 +512,9 @@ int main(int argc, char *argv[])
 
     // set keyboard callback function and make our context current (active)
     glfwSetKeyCallback(window, KeyCallback);
+	glfwSetMouseButtonCallback(window, mouse_callback);
+	glfwSetCursorPosCallback(window, cursor_callback);
+	glfwSetScrollCallback(window, scroll_callback);
     glfwMakeContextCurrent(window);
 
     //Intialize GLAD
@@ -494,7 +541,6 @@ int main(int argc, char *argv[])
     if (!InitializeGeometry(&geometry))
         cout << "Program failed to intialize geometry!" << endl;
 
-    //toggle wireframe
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
     float angle = 0.f, size = 1.f;
@@ -504,15 +550,6 @@ int main(int argc, char *argv[])
     float camera_radius = 4;
     float camera_phi = 0;
     float camera_theta = 0;
-    vec3 cameraLoc(
-            sin(camera_phi)*sin(camera_theta),
-            cos(camera_theta),
-            cos(camera_phi)*sin(camera_theta));
-    vec3 cameraDir = -cameraLoc;
-    vec3 cameraUp = normalize(vec3(
-            -cos(camera_phi),
-            1,
-            -sin(camera_phi)));
 
     float aspectRatio = (float)width/ (float)height;
     float zNear = .1f, zFar = 1000.f;
@@ -526,11 +563,19 @@ int main(int argc, char *argv[])
     // run an event-triggered main loop
     while (!glfwWindowShouldClose(window))
     {
-        angle = angle + .01f;
         glUseProgram(shader.program);
         mat4 model = translate(I, location) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0)) * scale(I, vec3(size, 1, 1));
+
+		camera_phi = -mouse_status.location_offset.x;
+		camera_theta = -mouse_status.location_offset.y;
+
+		vec3 cameraLoc( sin(camera_phi)*sin(camera_theta), cos(camera_theta), cos(camera_phi)*sin(camera_theta));
+		camera_radius = mouse_status.zoom;
         vec3 modified_camera_loc = camera_radius * cameraLoc;
-        mat4 view = lookAt(modified_camera_loc, vec3(0)/*modified_camera_loc+cameraDir*/, cameraUp);
+		vec3 cameraDir = -modified_camera_loc;
+		vec3 cameraUp = normalize(vec3( -cos(camera_phi), 1, -sin(camera_phi)));
+
+        mat4 view = lookAt(modified_camera_loc, modified_camera_loc+cameraDir, cameraUp);
         mat4 proj = perspective(fov, aspectRatio, zNear, zFar);
         glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
         glUniformMatrix4fv(viewUniform, 1, false, value_ptr(view));
