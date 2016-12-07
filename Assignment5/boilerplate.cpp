@@ -172,10 +172,8 @@ struct MyGeometry
 {
     // OpenGL names for array buffer objects, vertex array object
     GLuint  vertexBuffer;
-    // ---
     GLuint  normalBuffer;
     GLuint  textureBuffer;
-    // ---
     GLuint  colourBuffer;
     GLuint  elementBuffer;
     GLuint  vertexArray;
@@ -183,42 +181,38 @@ struct MyGeometry
 
     // initialize object names to zero (OpenGL reserved value)
     MyGeometry() : vertexBuffer(0),
-    // ---
                    normalBuffer(0),
                    textureBuffer(0),
-    // ---
                    colourBuffer(0),
                    vertexArray(0),
                    elementCount(0)
     {}
 };
 
-void get_sphere_vertices(vector<GLfloat>& vertices, vector<GLfloat>& normals, float radius, float level)
+void initialize_sphere(vector<GLfloat>& vertices, vector<GLfloat>& normals, vector<GLfloat>& textureCoords, vector<GLfloat>& colours, float radius, float level)
 {
-    float degree_step = 2*M_PI/level;
+    float degree = 2*M_PI/level;
     float theta, phi, next_theta, next_phi;
 
-    for (int i = 0; i < level/2; ++i)
-    {
-        phi = i*degree_step;
-        next_phi = phi + degree_step;
+	for (int i = 0; i < level/2; ++i) {
+		theta = i*degree;
+		next_theta = theta + degree;
 
-        for (int j = 0; j < level; ++j)
-        {
-            theta = j*degree_step;
-            next_theta = theta + degree_step;
+		for (int j = 0; j < level; ++j) {
+			phi = j*degree;
+			next_phi = phi + degree;
 
             // first triangle
             // top left, bottom left, bottom right
-            float triangle1_x1 = cos(theta)*sin(phi);
-            float triangle1_y1 = sin(theta)*sin(phi);
-            float triangle1_z1 = cos(phi);
-            float triangle1_x2 = cos(theta)*sin(next_phi);
-            float triangle1_y2 = sin(theta)*sin(next_phi);
-            float triangle1_z2 = cos(next_phi);
-            float triangle1_x3 = cos(next_theta)*sin(next_phi);
-            float triangle1_y3 = sin(next_theta)*sin(next_phi);
-            float triangle1_z3 = cos(next_phi);
+			float triangle1_x1 = sin(phi)*sin(theta);
+			float triangle1_y1 = cos(theta);
+			float triangle1_z1 = cos(phi)*sin(theta);
+			float triangle1_x2 = sin(phi)*sin(next_theta);
+			float triangle1_y2 = cos(next_theta);
+			float triangle1_z2 = cos(phi)*sin(next_theta);
+			float triangle1_x3 = sin(next_phi)*sin(next_theta);
+			float triangle1_y3 = cos(next_theta);
+			float triangle1_z3 = cos(next_phi)*sin(next_theta);
 
             vertices.push_back(radius*triangle1_x1);
             vertices.push_back(radius*triangle1_y1);
@@ -240,17 +234,24 @@ void get_sphere_vertices(vector<GLfloat>& vertices, vector<GLfloat>& normals, fl
             normals.push_back(triangle1_y3);
             normals.push_back(triangle1_z3);
 
+			textureCoords.push_back(float(phi/(M_PI*2)));
+			textureCoords.push_back(float(theta/M_PI));
+			textureCoords.push_back(float(phi/(M_PI*2)));
+			textureCoords.push_back(float(next_theta/M_PI));
+			textureCoords.push_back(float(next_phi/(M_PI*2)));
+			textureCoords.push_back(float(next_theta/M_PI));
+
             // second triangle
             // top left, bottom right, top right
-            float triangle2_x1 = cos(theta)*sin(phi);
-            float triangle2_y1 = sin(theta)*sin(phi);
-            float triangle2_z1 = cos(phi);
-            float triangle2_x2 = cos(next_theta)*sin(next_phi);
-            float triangle2_y2 = sin(next_theta)*sin(next_phi);
-            float triangle2_z2 = cos(next_phi);
-            float triangle2_x3 = cos(next_theta)*sin(phi);
-            float triangle2_y3 = sin(next_theta)*sin(phi);
-            float triangle2_z3 = cos(phi);
+			float triangle2_x1 = sin(phi)*sin(theta);
+			float triangle2_y1 = cos(theta);
+			float triangle2_z1 = cos(phi)*sin(theta);
+			float triangle2_x2 = sin(next_phi)*sin(next_theta);
+			float triangle2_y2 = cos(next_theta);
+			float triangle2_z2 = cos(next_phi)*sin(next_theta);
+			float triangle2_x3 = sin(next_phi)*sin(theta);
+			float triangle2_y3 = cos(theta);
+			float triangle2_z3 = cos(next_phi)*sin(theta);
 
             vertices.push_back(radius*triangle2_x1);
             vertices.push_back(radius*triangle2_y1);
@@ -271,8 +272,21 @@ void get_sphere_vertices(vector<GLfloat>& vertices, vector<GLfloat>& normals, fl
             normals.push_back(triangle2_x3);
             normals.push_back(triangle2_y3);
             normals.push_back(triangle2_z3);
+
+			textureCoords.push_back(float(phi/(M_PI*2)));
+			textureCoords.push_back(float(theta/M_PI));
+			textureCoords.push_back(float(next_phi/(M_PI*2)));
+			textureCoords.push_back(float(next_theta/M_PI));
+			textureCoords.push_back(float(next_phi/(M_PI*2)));
+			textureCoords.push_back(float(theta/M_PI));
         }
     }
+
+	for (uint i = 0; i <= vertices.size(); i++) {
+		colours.push_back(1);
+		colours.push_back(1);
+		colours.push_back(1);
+	}
 }
 
 // create buffers and fill with geometry data, returning true if successful
@@ -280,33 +294,18 @@ bool InitializeGeometry(MyGeometry *geometry)
 {
     vector<GLfloat> vertices;
     vector<GLfloat> normals;
-	get_sphere_vertices(vertices, normals, 1.5, 36);
+    vector<GLfloat> textureCoords;
+    vector<GLfloat> colours;
+	initialize_sphere(vertices, normals, textureCoords, colours, 1.5, 36);
 
     // make it a white sphere
-    GLfloat colours[vertices.size()];
 
-    const GLfloat textureCoords[16] = {
-        0.0f, 0.0f,
-        0.0f, 0.333f,
-        0.333f, 0.333f,
-        0.333f, 0.0f,
-
-        0.0f, 0.0f,
-        0.0f, 0.666f,
-        0.666f, 0.666f,
-        0.666f, 0.0f,
-    };
-    // ---
     geometry->elementCount = vertices.size();
 
-    // these vertex attribute indices correspond to those specified for the
-    // input variables in the vertex shader
     const GLuint VERTEX_INDEX = 0;
     const GLuint COLOUR_INDEX = 1;
-    // ---
     const GLuint TEXTURE_INDEX = 2;
     const GLuint NORMAL_INDEX = 3;
-    // ---
 
     // create an array buffer object for storing our vertices
     glGenBuffers(1, &geometry->vertexBuffer);
@@ -316,19 +315,17 @@ bool InitializeGeometry(MyGeometry *geometry)
     // create another one for storing our colours
     glGenBuffers(1, &geometry->colourBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->colourBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(colours), colours, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, colours.size() * sizeof(GLfloat), &colours[0], GL_STATIC_DRAW);
     
-    // ---
     // create another one for storing our textures
     glGenBuffers(1, &geometry->textureBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->textureBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoords), textureCoords, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, textureCoords.size() * sizeof(GLfloat), &textureCoords[0], GL_STATIC_DRAW);
 
     // create another one for storing our normals
     glGenBuffers(1, &geometry->normalBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, geometry->normalBuffer);
     glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(GLfloat), &normals[0], GL_STATIC_DRAW);
-    // ---
 
     // create a vertex array object encapsulating all our vertex attributes
     glGenVertexArrays(1, &geometry->vertexArray);
@@ -339,7 +336,6 @@ bool InitializeGeometry(MyGeometry *geometry)
     //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry->elementBuffer);
     //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // ---
     glBindBuffer(GL_ARRAY_BUFFER, geometry->textureBuffer);
     glVertexAttribPointer(TEXTURE_INDEX, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(TEXTURE_INDEX);
@@ -347,7 +343,6 @@ bool InitializeGeometry(MyGeometry *geometry)
     glBindBuffer(GL_ARRAY_BUFFER, geometry->normalBuffer);
     glVertexAttribPointer(NORMAL_INDEX, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(NORMAL_INDEX);
-    // ---
 
     // associate the position array with the vertex array object
     glBindBuffer(GL_ARRAY_BUFFER, geometry->vertexBuffer);
@@ -394,7 +389,6 @@ void RenderScene(MyGeometry *geometry, MyShader *shader, MyTexture *texture)
     glBindTexture(texture->target, texture->textureID);
     glUseProgram(shader->program);
     glBindVertexArray(geometry->vertexArray);
-    //glDrawElements(GL_TRIANGLES,geometry->elementCount,GL_UNSIGNED_INT, 0);
     glDrawArrays(GL_TRIANGLES, 0, geometry->elementCount);
 
     // reset state to default (no shader or geometry bound)
@@ -414,8 +408,6 @@ static void mouse_callback(GLFWwindow* window, int button, int action, int mods)
 	} else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
 		mouse_status.button_pressed = false;
 	}
-	cout << "location_x:" << mouse_status.location_offset.x << endl;
-	cout << "location_y:" << mouse_status.location_offset.y << endl;
 }
 
 static void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
@@ -540,7 +532,7 @@ int main(int argc, char *argv[])
 
         mat4 model = translate(I, location) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0)) * scale(I, vec3(size, 1, 1));
 
-		camera_phi = -mouse_status.location_offset.x;
+		camera_phi = mouse_status.location_offset.x;
 		camera_theta = mouse_status.location_offset.y;
 
 		vec3 cameraLoc( sin(camera_phi)*sin(camera_theta), cos(camera_theta), cos(camera_phi)*sin(camera_theta));
@@ -556,7 +548,7 @@ int main(int argc, char *argv[])
 
         // ---
         MyTexture texture;
-        InitializeTexture(&texture, "test.png");
+        InitializeTexture(&texture, "images/earth.jpg");
         // ---
 
         // call function to draw our scene
