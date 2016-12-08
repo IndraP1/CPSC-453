@@ -85,7 +85,6 @@ struct KeyboardStatus
 KeyboardStatus keyboard_status;
 
 
-
 // load, compile, and link shaders, returning true if successful
 bool InitializeShaders(MyShader *shader)
 {
@@ -290,13 +289,13 @@ void initialize_sphere(vector<GLfloat>& vertices, vector<GLfloat>& normals, vect
 }
 
 // create buffers and fill with geometry data, returning true if successful
-bool InitializeGeometry(MyGeometry *geometry)
+bool InitializeGeometry(MyGeometry *geometry, float radius, float level)
 {
     vector<GLfloat> vertices;
     vector<GLfloat> normals;
     vector<GLfloat> textureCoords;
     vector<GLfloat> colours;
-	initialize_sphere(vertices, normals, textureCoords, colours, 1.5, 36);
+	initialize_sphere(vertices, normals, textureCoords, colours, radius, level);
 
     // make it a white sphere
 
@@ -382,7 +381,7 @@ void RenderScene(MyGeometry *geometry, MyShader *shader, MyTexture *texture)
     // clear screen to a black colour
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    /* glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); */
 
     // bind our shader program and the vertex array object containing our
     // scene geometry, then tell OpenGL to draw our geometry
@@ -419,7 +418,7 @@ static void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	mouse_status.zoom -= yoffset;
+	mouse_status.zoom -= yoffset/10;
 }
 
 
@@ -451,6 +450,14 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 
 // ==========================================================================
 // PROGRAM ENTRY POINT
+struct Planet 
+{
+	Planet* orbit;
+	MyGeometry geometry;
+	MyTexture texture;
+	mat4 transform_matrix;
+};
+
 
 int main(int argc, char *argv[])
 {
@@ -502,12 +509,24 @@ int main(int argc, char *argv[])
     }
 
     // call function to create and fill buffers with geometry data
-    MyGeometry geometry;
-    if (!InitializeGeometry(&geometry))
+	
+	Planet earth;
+    if (!InitializeGeometry(&earth.geometry, 1.5, 36))
         cout << "Program failed to intialize geometry!" << endl;
+	InitializeTexture(&earth.texture, "images/earth.jpg");
+	Planet sun;
+    if (!InitializeGeometry(&sun.geometry, 3, 36))
+        cout << "Program failed to intialize geometry!" << endl;
+	InitializeTexture(&sun.texture, "images/sun.jpg");
+	/* Planet moon; */
+    /* if (!InitializeGeometry(&moon.geometry, 1, 36)) */
+        /* cout << "Program failed to intialize geometry!" << endl; */
+	/* InitializeTexture(&moon.texture, "images/moon.jpg"); */
+	/* Planet space; */
+    /* if (!InitializeGeometry(&space.geometry, 40, 36)) */
+        /* cout << "Program failed to intialize geometry!" << endl; */
+	/* InitializeTexture(&space.texture, "images/space.jpg"); */
 
-    /* glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
-    
     float angle = 0.f, size = 1.f;
     vec3 location(0,0,0);
     vec3 axis(0,1,0);
@@ -525,12 +544,11 @@ int main(int argc, char *argv[])
     GLint viewUniform = glGetUniformLocation(shader.program, "view");
     GLint projUniform = glGetUniformLocation(shader.program, "proj");
     // run an event-triggered main loop
+
     while (!glfwWindowShouldClose(window))
     {
         glUseProgram(shader.program);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        mat4 model = translate(I, location) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0)) * scale(I, vec3(size, 1, 1));
 
 		camera_phi = mouse_status.location_offset.x;
 		camera_theta = mouse_status.location_offset.y;
@@ -542,17 +560,18 @@ int main(int argc, char *argv[])
 
         mat4 view = lookAt(modified_camera_loc, -modified_camera_loc, cameraUp);
         mat4 proj = perspective(fov, aspectRatio, zNear, zFar);
-        glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
         glUniformMatrix4fv(viewUniform, 1, false, value_ptr(view));
         glUniformMatrix4fv(projUniform, 1, false, value_ptr(proj));
 
-        // ---
-        MyTexture texture;
-        InitializeTexture(&texture, "images/earth.jpg");
-        // ---
-
         // call function to draw our scene
-        RenderScene(&geometry, &shader, &texture);
+        mat4 model = translate(I, vec3(0,0,0)) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0));
+        glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
+		RenderScene(&sun.geometry, &shader, &sun.texture);
+
+        model = translate(I, vec3(0,0,9)) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0)); 
+		glUseProgram(shader.program);
+        glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
+		RenderScene(&earth.geometry, &shader, &earth.texture);
 
         glfwSwapBuffers(window);
 
@@ -560,7 +579,8 @@ int main(int argc, char *argv[])
     }
 
     // clean up allocated resources before exit
-    DestroyGeometry(&geometry);
+    DestroyGeometry(&sun.geometry);
+    DestroyGeometry(&earth.geometry);
     DestroyShaders(&shader);
     glfwDestroyWindow(window);
     glfwTerminate();
