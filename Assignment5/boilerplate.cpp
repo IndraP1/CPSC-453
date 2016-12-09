@@ -84,7 +84,14 @@ struct KeyboardStatus
 KeyboardStatus keyboard_status;
 
 float earthrotation = 0.0;
+float cloudsrotation = 0.0;
 
+float sunrotation_b = 0.00695;
+float earthrotation_b = 0.4;
+float earth_rotation_b = 0.005;
+float cloudsrotation_b = 0.7;
+float clouds_rotation_b = 0.005;
+float moonrotation_b = 0.12;
 // load, compile, and link shaders, returning true if successful
 bool InitializeShaders(MyShader *shader)
 {
@@ -376,11 +383,15 @@ void DestroyGeometry(MyGeometry *geometry)
 // --------------------------------------------------------------------------
 // Rendering function that draws our scene to the frame buffer
 
-void RenderScene(MyGeometry *geometry, MyShader *shader, MyTexture *texture)
+void RenderScene(MyGeometry *geometry, MyShader *shader, MyTexture *texture, bool clouds)
 {
     // clear screen to a black colour
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
+	if(clouds) {
+		glEnable (GL_BLEND); 
+		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+	}
     /* glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); */
 
     // bind our shader program and the vertex array object containing our
@@ -442,6 +453,7 @@ Planet sun;
 Planet moon;
 Planet earth;
 Planet space;
+Planet clouds;
 // --------------------------------------------------------------------------
 // GLFW callback functions
 
@@ -471,7 +483,32 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		moon.rotation = 0;
 		sun.rotation = 0;
 		earth.rotation = 0;
+		clouds.rotation = 0;
 		earthrotation = 0;
+		cloudsrotation = 0;
+
+		sunrotation_b = 0.00695;
+		earthrotation_b = 0.4;
+		earth_rotation_b = 0.005;
+		cloudsrotation_b = 0.7;
+		clouds_rotation_b = 0.005;
+		moonrotation_b = 0.12;
+	}
+    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+		sunrotation_b /= 2;
+		earthrotation_b /= 2;
+		earth_rotation_b /=2;
+		cloudsrotation_b /=2;
+		clouds_rotation_b /=2;
+		moonrotation_b /= 2;
+	}
+    if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+		sunrotation_b *= 2;
+		earthrotation_b *= 2;
+		earth_rotation_b *=2;
+		cloudsrotation_b *=2;
+		clouds_rotation_b *=2;
+		moonrotation_b *= 2;
 	}
 }
 
@@ -544,6 +581,11 @@ int main(int argc, char *argv[])
         cout << "Program failed to intialize geometry!" << endl;
 	InitializeTexture(&space.texture, "images/space.jpg");
 
+	// Bonus
+    if (!InitializeGeometry(&clouds.geometry, 1.6, 36))
+        cout << "Program failed to intialize geometry!" << endl;
+	InitializeTexture(&clouds.texture, "images/clouds.jpg");
+
     vec3 location(0,0,0);
     vec3 axis(0,1,0);
 
@@ -585,13 +627,15 @@ int main(int argc, char *argv[])
         mat4 model = sun.translate * sun.rotate;
 		sun.transform = model;
 		if(!keyboard_status.paused)
-			sun.rotation += 0.00695;
+			sun.rotation += sunrotation_b;
 
 		glUseProgram(shader.program);
 		GLint diffuse = glGetUniformLocation(shader.program, "diffuse");
 		glUniform1ui(diffuse, 0);
+		GLint cloud = glGetUniformLocation(shader.program, "clouds");
+		glUniform1ui(cloud, 0);
         glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
-		RenderScene(&sun.geometry, &shader, &sun.texture);
+		RenderScene(&sun.geometry, &shader, &sun.texture, false);
 
 		// Earth
 		earth.translate = translate(I, vec3(0,0,11));
@@ -601,15 +645,37 @@ int main(int argc, char *argv[])
 		earth.transform = model;
 
 		if(!keyboard_status.paused)
-			earth.rotation += 0.4;
+			earth.rotation += earthrotation_b;
 		if(!keyboard_status.paused)
-			earthrotation += 0.005;
+			earthrotation += earth_rotation_b;
 
 		glUseProgram(shader.program);
 		diffuse = glGetUniformLocation(shader.program, "diffuse");
 		glUniform1ui(diffuse, 1);
+		cloud = glGetUniformLocation(shader.program, "clouds");
+		glUniform1ui(cloud, 0);
         glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
-		RenderScene(&earth.geometry, &shader, &earth.texture);
+		RenderScene(&earth.geometry, &shader, &earth.texture, false);
+
+		// Earth Clouds
+		clouds.translate = translate(I, vec3(0,0,11));
+		clouds.rotate = rotate(I, clouds.rotation, vec3(0,1,0)) * rotate(I, 0.40907504363002f, vec3(1,0,0));
+		model = sun.transform * rotate(I, cloudsrotation, vec3(0,1,0)) * clouds.translate * clouds.rotate;
+		clouds.transform = model;
+
+		if(!keyboard_status.paused)
+			clouds.rotation += cloudsrotation_b;
+		if(!keyboard_status.paused)
+			cloudsrotation += clouds_rotation_b;
+
+		glUseProgram(shader.program);
+		cloud = glGetUniformLocation(shader.program, "clouds");
+		glUniform1ui(cloud, 1);
+		diffuse = glGetUniformLocation(shader.program, "diffuse");
+		glUniform1ui(diffuse, 1);
+        glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
+
+		RenderScene(&clouds.geometry, &shader, &clouds.texture, true);
 
 		// Moon
 		moon.translate = translate(I, vec3(0,0,3));
@@ -617,21 +683,25 @@ int main(int argc, char *argv[])
 
 		model = sun.transform * rotate(I, earthrotation, vec3(0,1,0)) * earth.translate * earthaxial * moon.rotate * moon.translate;
 		if(!keyboard_status.paused)
-			moon.rotation += 0.12;
+			moon.rotation += moonrotation_b;
 
 		glUseProgram(shader.program);
 		diffuse = glGetUniformLocation(shader.program, "diffuse");
 		glUniform1ui(diffuse, 1);
+		cloud = glGetUniformLocation(shader.program, "clouds");
+		glUniform1ui(cloud, 0);
         glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
-		RenderScene(&moon.geometry, &shader, &moon.texture);
+		RenderScene(&moon.geometry, &shader, &moon.texture, false);
 
 		// Space
         model = translate(I, vec3(0,0,0));  
 		glUseProgram(shader.program);
 		diffuse = glGetUniformLocation(shader.program, "diffuse");
 		glUniform1ui(diffuse, 0);
+		cloud = glGetUniformLocation(shader.program, "clouds");
+		glUniform1ui(cloud, 0);
         glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
-		RenderScene(&space.geometry, &shader, &space.texture);
+		RenderScene(&space.geometry, &shader, &space.texture, false);
 
         glfwSwapBuffers(window);
 

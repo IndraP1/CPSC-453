@@ -20,6 +20,7 @@ In terminal, run the following commands:
 . `./boilerplate`
 . Press left mouse button and drag to explore scene.
 . Use scroll wheel to zoom in and out of the scene.
+. Use keys `UP, and `DOWN` to change the speed of the scene. 
 . Use key `P` to pause the scene. 
 . Use key `R` to reset the scene. 
 . Use key `Esc` to close the window.

@@ -16,7 +16,7 @@ layout(location = 3) in vec3 VertexNormal;
 // ---
 
 // output to be interpolated between vertices and passed to the fragment stage
-out vec3 Colour;
+out vec4 Colour;
 // ---
 out vec2 TextureCoord;
 out vec3 Normal;

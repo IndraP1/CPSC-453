@@ -7,7 +7,7 @@
 #version 410
 
 // interpolated colour received from vertex stage
-in vec3 Colour;
+in vec4 Colour;
 in vec2 TextureCoord;
 in vec3 Normal;
 in vec3 FragPos;
@@ -17,14 +17,20 @@ out vec4 FragmentColour;
 
 uniform sampler2D tex;
 uniform uint diffuse;
+uniform uint clouds;
 
 void main(void)
 {
     // write colour output without modification
-	/* FragmentColour = texture(tex, Normal.xy + vec2(0.5, 0.5)); */
 	if (diffuse == 1) {
-	FragmentColour = texture(tex, TextureCoord.xy)*(dot(Normal, -FragPos))*0.6;
+		FragmentColour = texture(tex, TextureCoord.xy)*(dot(Normal, -FragPos))*0.6;
 	} else if (diffuse == 0) {
 		FragmentColour = texture(tex, TextureCoord.xy);
+	}
+
+	if (clouds == 1) {
+		FragmentColour.a = 0.3;
+	} else if (clouds == 0) {
+		FragmentColour.a = 3;
 	}
 }
