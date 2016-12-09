@@ -79,11 +79,11 @@ MouseStatus mouse_status;
 
 struct KeyboardStatus 
 {
-	float x = 0;
-	float y = 0;
+	bool paused = false;
 };
 KeyboardStatus keyboard_status;
 
+float earthrotation = 0.0;
 
 // load, compile, and link shaders, returning true if successful
 bool InitializeShaders(MyShader *shader)
@@ -418,15 +418,30 @@ static void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	if(!(mouse_status.zoom < 18)) {
+	if((mouse_status.zoom >= 18) && (mouse_status.zoom <= 40)) {
 		mouse_status.zoom -= yoffset/10;
 	} else if(mouse_status.zoom < 18) {
 		mouse_status.zoom = 18;
+	} else if(mouse_status.zoom > 40) {
+		mouse_status.zoom = 39;
 	}
 }
 
+struct Planet 
+{
+	Planet* orbit;
+	MyGeometry geometry;
+	MyTexture texture;
+	mat4 rotate;
+	mat4 translate;
+	mat4 transform;
+	float rotation = 0;
+};
 
-
+Planet sun;
+Planet moon;
+Planet earth;
+Planet space;
 // --------------------------------------------------------------------------
 // GLFW callback functions
 
@@ -442,30 +457,26 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
-    if (key == GLFW_KEY_UP && action == GLFW_PRESS)
-		keyboard_status.x += 0.1;
-    if (key == GLFW_KEY_DOWN && action == GLFW_PRESS)
-		keyboard_status.x -= 0.1;
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-		keyboard_status.y += 0.1;
-    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
-		keyboard_status.y -= 0.1;
+    if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+		if (keyboard_status.paused) {
+			keyboard_status.paused = false;
+		} else if (!keyboard_status.paused) {
+			keyboard_status.paused = true;
+		}
+	}
+    if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+		mouse_status.location_offset.x = -0.4;
+		mouse_status.location_offset.y = 4.36;
+		mouse_status.zoom = 18;
+		moon.rotation = 0;
+		sun.rotation = 0;
+		earth.rotation = 0;
+		earthrotation = 0;
+	}
 }
 
 // ==========================================================================
 // PROGRAM ENTRY POINT
-struct Planet 
-{
-	Planet* orbit;
-	MyGeometry geometry;
-	MyTexture texture;
-	mat4 rotate;
-	mat4 translate;
-	mat4 transform;
-	float rotation = 0;
-};
-
-
 int main(int argc, char *argv[])
 {
     // initialize the GLFW windowing system
@@ -520,19 +531,15 @@ int main(int argc, char *argv[])
 
     // call function to create and fill buffers with geometry data
 	
-	Planet earth;
     if (!InitializeGeometry(&earth.geometry, 1.5, 36))
         cout << "Program failed to intialize geometry!" << endl;
 	InitializeTexture(&earth.texture, "images/earth.jpg");
-	Planet sun;
     if (!InitializeGeometry(&sun.geometry, 3, 36))
         cout << "Program failed to intialize geometry!" << endl;
 	InitializeTexture(&sun.texture, "images/sun.jpg");
-	Planet moon;
-    if (!InitializeGeometry(&moon.geometry, 1, 36))
+    if (!InitializeGeometry(&moon.geometry, 0.8, 36))
         cout << "Program failed to intialize geometry!" << endl;
 	InitializeTexture(&moon.texture, "images/moon.jpg");
-	Planet space;
     if (!InitializeGeometry(&space.geometry, 40, 36))
         cout << "Program failed to intialize geometry!" << endl;
 	InitializeTexture(&space.texture, "images/space.jpg");
@@ -546,7 +553,6 @@ int main(int argc, char *argv[])
     float aspectRatio = (float)width/ (float)height;
     float zNear = .1f, zFar = 1000.f;
     float fov = 1.0472f;
-		float earthrotation = 0.0;
 
     mat4 I(1);
     glUseProgram(shader.program);
@@ -578,7 +584,8 @@ int main(int argc, char *argv[])
 		sun.translate = translate(I, vec3(0,0,0));
         mat4 model = sun.translate * sun.rotate;
 		sun.transform = model;
-		sun.rotation += 0.00695;
+		if(!keyboard_status.paused)
+			sun.rotation += 0.00695;
 
 		glUseProgram(shader.program);
 		GLint diffuse = glGetUniformLocation(shader.program, "diffuse");
@@ -587,13 +594,16 @@ int main(int argc, char *argv[])
 		RenderScene(&sun.geometry, &shader, &sun.texture);
 
 		// Earth
-		earth.translate = translate(I, vec3(0,0,9));
+		earth.translate = translate(I, vec3(0,0,11));
 		earth.rotate = rotate(I, earth.rotation, vec3(0,1,0)) * rotate(I, 0.40907504363002f, vec3(1,0,0));
+		mat4 earthaxial = rotate(I, 0.40907504363002f, vec3(1,0,0));
 		model = sun.transform * rotate(I, earthrotation, vec3(0,1,0)) * earth.translate * earth.rotate;
 		earth.transform = model;
 
-		earth.rotation += 0.4;
-		earthrotation += 0.005;
+		if(!keyboard_status.paused)
+			earth.rotation += 0.4;
+		if(!keyboard_status.paused)
+			earthrotation += 0.005;
 
 		glUseProgram(shader.program);
 		diffuse = glGetUniformLocation(shader.program, "diffuse");
@@ -605,8 +615,9 @@ int main(int argc, char *argv[])
 		moon.translate = translate(I, vec3(0,0,3));
 		moon.rotate = rotate(I, moon.rotation, vec3(0,1,0));
 
-        model = earth.transform * moon.rotate * earth.rotate * moon.translate;
-		moon.rotation += 0.08446;
+		model = sun.transform * rotate(I, earthrotation, vec3(0,1,0)) * earth.translate * earthaxial * moon.rotate * moon.translate;
+		if(!keyboard_status.paused)
+			moon.rotation += 0.12;
 
 		glUseProgram(shader.program);
 		diffuse = glGetUniformLocation(shader.program, "diffuse");
