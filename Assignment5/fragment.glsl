@@ -16,10 +16,15 @@ in vec3 FragPos;
 out vec4 FragmentColour;
 
 uniform sampler2D tex;
+uniform uint diffuse;
 
 void main(void)
 {
     // write colour output without modification
 	/* FragmentColour = texture(tex, Normal.xy + vec2(0.5, 0.5)); */
-	FragmentColour = texture(tex, TextureCoord.xy);
+	if (diffuse == 1) {
+	FragmentColour = texture(tex, TextureCoord.xy)*(dot(Normal, -FragPos))*0.6;
+	} else if (diffuse == 0) {
+		FragmentColour = texture(tex, TextureCoord.xy);
+	}
 }

@@ -36,7 +36,7 @@ void main()
     // assign output colour to be interpolated
 	TextureCoord = VertexTextureCoord;
     // ---
-	Normal = (vec4(VertexNormal, 0)).xyz;
+	Normal = (model*vec4(VertexNormal, 0)).xyz;
     FragPos = (model*vec4(VertexPosition, 1)).xyz;
     // ---
 }

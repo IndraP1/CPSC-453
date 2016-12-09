@@ -73,7 +73,7 @@ struct MouseStatus
 	Coordinate location_offset;
 	Coordinate prev_location_offset;
 	Coordinate mouse_press;
-	float zoom = 4;
+	float zoom;
 };
 MouseStatus mouse_status;
 
@@ -418,7 +418,11 @@ static void cursor_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	mouse_status.zoom -= yoffset/10;
+	if(!(mouse_status.zoom < 18)) {
+		mouse_status.zoom -= yoffset/10;
+	} else if(mouse_status.zoom < 18) {
+		mouse_status.zoom = 18;
+	}
 }
 
 
@@ -455,7 +459,10 @@ struct Planet
 	Planet* orbit;
 	MyGeometry geometry;
 	MyTexture texture;
-	mat4 transform_matrix;
+	mat4 rotate;
+	mat4 translate;
+	mat4 transform;
+	float rotation = 0;
 };
 
 
@@ -467,6 +474,9 @@ int main(int argc, char *argv[])
         return -1;
     }
     glfwSetErrorCallback(ErrorCallback);
+	mouse_status.location_offset.x = -0.4;
+	mouse_status.location_offset.y = 4.36;
+	mouse_status.zoom = 18;
 
     // attempt to create a window with an OpenGL 4.1 core profile context
     GLFWwindow *window = 0;
@@ -518,16 +528,15 @@ int main(int argc, char *argv[])
     if (!InitializeGeometry(&sun.geometry, 3, 36))
         cout << "Program failed to intialize geometry!" << endl;
 	InitializeTexture(&sun.texture, "images/sun.jpg");
-	/* Planet moon; */
-    /* if (!InitializeGeometry(&moon.geometry, 1, 36)) */
-        /* cout << "Program failed to intialize geometry!" << endl; */
-	/* InitializeTexture(&moon.texture, "images/moon.jpg"); */
-	/* Planet space; */
-    /* if (!InitializeGeometry(&space.geometry, 40, 36)) */
-        /* cout << "Program failed to intialize geometry!" << endl; */
-	/* InitializeTexture(&space.texture, "images/space.jpg"); */
+	Planet moon;
+    if (!InitializeGeometry(&moon.geometry, 1, 36))
+        cout << "Program failed to intialize geometry!" << endl;
+	InitializeTexture(&moon.texture, "images/moon.jpg");
+	Planet space;
+    if (!InitializeGeometry(&space.geometry, 40, 36))
+        cout << "Program failed to intialize geometry!" << endl;
+	InitializeTexture(&space.texture, "images/space.jpg");
 
-    float angle = 0.f, size = 1.f;
     vec3 location(0,0,0);
     vec3 axis(0,1,0);
 
@@ -537,6 +546,7 @@ int main(int argc, char *argv[])
     float aspectRatio = (float)width/ (float)height;
     float zNear = .1f, zFar = 1000.f;
     float fov = 1.0472f;
+		float earthrotation = 0.0;
 
     mat4 I(1);
     glUseProgram(shader.program);
@@ -563,15 +573,54 @@ int main(int argc, char *argv[])
         glUniformMatrix4fv(viewUniform, 1, false, value_ptr(view));
         glUniformMatrix4fv(projUniform, 1, false, value_ptr(proj));
 
-        // call function to draw our scene
-        mat4 model = translate(I, vec3(0,0,0)) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0));
+		// Sun
+		sun.rotate = rotate(I, sun.rotation, axis); 
+		sun.translate = translate(I, vec3(0,0,0));
+        mat4 model = sun.translate * sun.rotate;
+		sun.transform = model;
+		sun.rotation += 0.00695;
+
+		glUseProgram(shader.program);
+		GLint diffuse = glGetUniformLocation(shader.program, "diffuse");
+		glUniform1ui(diffuse, 0);
         glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
 		RenderScene(&sun.geometry, &shader, &sun.texture);
 
-        model = translate(I, vec3(0,0,9)) * rotate(I, angle, axis) * rotate(I, angle, vec3(1,0,0)); 
+		// Earth
+		earth.translate = translate(I, vec3(0,0,9));
+		earth.rotate = rotate(I, earth.rotation, vec3(0,1,0)) * rotate(I, 0.40907504363002f, vec3(1,0,0));
+		model = sun.transform * rotate(I, earthrotation, vec3(0,1,0)) * earth.translate * earth.rotate;
+		earth.transform = model;
+
+		earth.rotation += 0.4;
+		earthrotation += 0.005;
+
 		glUseProgram(shader.program);
+		diffuse = glGetUniformLocation(shader.program, "diffuse");
+		glUniform1ui(diffuse, 1);
         glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
 		RenderScene(&earth.geometry, &shader, &earth.texture);
+
+		// Moon
+		moon.translate = translate(I, vec3(0,0,3));
+		moon.rotate = rotate(I, moon.rotation, vec3(0,1,0));
+
+        model = earth.transform * moon.rotate * earth.rotate * moon.translate;
+		moon.rotation += 0.08446;
+
+		glUseProgram(shader.program);
+		diffuse = glGetUniformLocation(shader.program, "diffuse");
+		glUniform1ui(diffuse, 1);
+        glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
+		RenderScene(&moon.geometry, &shader, &moon.texture);
+
+		// Space
+        model = translate(I, vec3(0,0,0));  
+		glUseProgram(shader.program);
+		diffuse = glGetUniformLocation(shader.program, "diffuse");
+		glUniform1ui(diffuse, 0);
+        glUniformMatrix4fv(modelUniform, 1, false, value_ptr(model));
+		RenderScene(&space.geometry, &shader, &space.texture);
 
         glfwSwapBuffers(window);
 
@@ -581,6 +630,8 @@ int main(int argc, char *argv[])
     // clean up allocated resources before exit
     DestroyGeometry(&sun.geometry);
     DestroyGeometry(&earth.geometry);
+    DestroyGeometry(&moon.geometry);
+    DestroyGeometry(&space.geometry);
     DestroyShaders(&shader);
     glfwDestroyWindow(window);
     glfwTerminate();
