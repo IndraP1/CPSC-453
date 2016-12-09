@@ -1,0 +1,37 @@
+= CPSC 453 Assignment 5 README
+
+== Student Info and Assignement Details
+
+Name: Mahindra Prasetyo
+
+The following code was not my own:
+
+- boilerplate.cpp was provided but heavily modified.
+- vertex.glsl, and fragment.glsl were provided but heavily modified.
+-  All code in middleware directory, and makefile were also provided.
+
+Note that I did not use a logarithmic scale as I preferred the look of what I have now. However, everything spins and moves to scale.
+
+== Instructions
+
+In terminal, run the following commands:
+
+. `make`
+. `./boilerplate`
+. Press left mouse button and drag to explore scene.
+. Use scroll wheel to zoom in and out of the scene.
+. Use key `P` to pause the scene. 
+. Use key `R` to reset the scene. 
+. Use key `Esc` to close the window.
+
+== Platform and Compiler Info
+
+- Fedora Release 24
+- gcc version 6.2.1 20160916 (Red Hat 6.2.1-2) (GCC) 
+- OpenGL version string: 4.5.0 NVIDIA 367.18
+
+== Image Sources
+- http://www.solarsystemscope.com/nexus/textures/texture_pack/assets/preview_sun.jpg
+- http://flatplanet.sourceforge.net/maps/images/earthmap_hires.jpg
+- https://www.nhn.ou.edu/~jeffery/astro/moon/map/moon_map_mercator.jpg
+- http://www.gunnars.com/wp-content/uploads/2014/08/Space.jpg
